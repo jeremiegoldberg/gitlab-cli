@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
+	"time"
 
 	"gitlab-manager/cmd/utils"
 
@@ -70,6 +72,7 @@ func init() {
 	getCmd.Flags().IntP("project", "p", 0, "Project ID")
 	getCmd.Flags().IntP("issue", "i", 0, "Issue IID")
 	getCmd.MarkFlagRequired("issue")
+	getCmd.Flags().BoolP("json", "j", false, "Output as JSON")
 
 	// Create flags
 	createCmd.Flags().IntP("project", "p", 0, "Project ID")
@@ -122,15 +125,28 @@ func runGet(cmd *cobra.Command, args []string) {
 	projectID, _ := utils.GetProjectID(cmd)
 	issueIID, _ := cmd.Flags().GetInt("issue")
 
-	issue, _, err := client.Issues.GetIssue(projectID, issueIID)
+	if jsonOutput, _ := cmd.Flags().GetBool("json"); jsonOutput {
+		output, err := ReadIssueAsJSON(projectID, issueIID)
+		if err != nil {
+			log.Fatalf("Failed to get issue: %v", err)
+		}
+		fmt.Println(output)
+		return
+	}
+
+	issue, err := ReadIssue(projectID, issueIID)
 	if err != nil {
 		log.Fatalf("Failed to get issue: %v", err)
 	}
 
-	fmt.Printf("Issue #%d\n", issue.IID)
-	fmt.Printf("Title: %s\n", issue.Title)
+	// Print formatted output
+	fmt.Printf("Issue #%d: %s\n", issue.IID, issue.Title)
 	fmt.Printf("State: %s\n", issue.State)
-	fmt.Printf("Description:\n%s\n", issue.Description)
+	if len(issue.Labels) > 0 {
+		fmt.Printf("Labels: %s\n", strings.Join(issue.Labels, ", "))
+	}
+	fmt.Printf("Created: %s\n", issue.CreatedAt.Format(time.RFC3339))
+	fmt.Printf("URL: %s\n", issue.WebURL)
 }
 
 func runCreate(cmd *cobra.Command, args []string) {

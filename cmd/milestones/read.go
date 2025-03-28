@@ -11,7 +11,7 @@ import (
 
 // ReadMilestone gets a milestone and returns it as a structured type
 func ReadMilestone(projectID, milestoneID int) (*types.Milestone, error) {
-	milestone, _, err := client.Milestones.GetMilestone(projectID, milestoneID)
+	milestone, _, err := client.Milestones.GetMilestone(projectID, milestoneID, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get milestone: %v", err)
 	}
@@ -44,6 +44,21 @@ func ReadMilestonesAsJSON(projectID int, opts *gitlab.ListMilestonesOptions) (st
 	jsonData, err := json.MarshalIndent(milestones, "", "  ")
 	if err != nil {
 		return "", fmt.Errorf("failed to marshal milestones: %v", err)
+	}
+
+	return string(jsonData), nil
+}
+
+// ReadMilestoneAsJSON gets a milestone and returns it as formatted JSON
+func ReadMilestoneAsJSON(projectID, milestoneID int) (string, error) {
+	milestone, err := ReadMilestone(projectID, milestoneID)
+	if err != nil {
+		return "", err
+	}
+
+	jsonData, err := json.MarshalIndent(milestone, "", "  ")
+	if err != nil {
+		return "", fmt.Errorf("failed to marshal milestone: %v", err)
 	}
 
 	return string(jsonData), nil

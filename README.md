@@ -7,7 +7,7 @@ A command-line interface tool for managing GitLab resources (issues, merge reque
 - Full CRUD operations for issues, merge requests, and milestones
 - Automatic issue linking in merge requests
 - GitLab CI integration
-- JSON output support
+- Structured data output (both human-readable and JSON formats)
 - Detailed description viewing
 
 ## Installation
@@ -78,6 +78,7 @@ gitlab-cli issues list --project 123
 
 # Get issue details
 gitlab-cli issues get -i 123
+gitlab-cli issues get -i 123 --json
 
 # Get issue description
 gitlab-cli issues get-description -i 123
@@ -212,9 +213,11 @@ Commands:
 - `list`: List issues
   - `--state`: Filter by state (opened/closed)
   - `--project`: Project ID
+  - `--json, -j`: Output in JSON format
 - `get`: Get issue details
   - `--issue, -i`: Issue IID (required)
   - `--project`: Project ID
+  - `--json, -j`: Output in JSON format
 - `get-description`: Get issue description
   - `--issue, -i`: Issue IID (required)
 - `create`: Create new issue
@@ -240,8 +243,10 @@ Commands:
 - `list`: List merge requests
   - `--state`: Filter by state (opened/closed/merged/all)
   - `--target`: Filter by target branch
+  - `--json, -j`: Output in JSON format
 - `get`: Get MR details
   - `--mr, -m`: MR IID (required)
+  - `--json, -j`: Output in JSON format
 - `get-description`: Get MR description
   - `--mr, -m`: MR IID (required)
 - `get-issues`: Get issues linked to an MR
@@ -268,8 +273,10 @@ gitlab-cli milestones [command] [flags]
 Commands:
 - `list`: List milestones
   - `--state`: Filter by state (active/closed)
+  - `--json, -j`: Output in JSON format
 - `get`: Get milestone details
   - `--milestone, -m`: Milestone ID (required)
+  - `--json, -j`: Output in JSON format
 - `create`: Create milestone
   - `--title, -t`: Milestone title (required)
   - `--description, -d`: Description
@@ -280,4 +287,32 @@ Commands:
   - `--description`: New description
   - `--due-date`: New due date
   - `--state`: State event (close/activate)
+
+## JSON Output
+
+Most read operations support JSON output format. This is useful for scripting or when you need to process the data programmatically.
+
+```bash
+# Get issue in JSON format
+gitlab-cli issues get -i 123 --json
+
+# Example output:
+{
+  "iid": 123,
+  "title": "Bug in login form",
+  "description": "Users cannot log in when...",
+  "state": "opened",
+  "labels": ["bug", "priority::high"],
+  "created_at": "2024-01-15T10:30:00Z",
+  "updated_at": "2024-01-16T15:45:00Z",
+  "web_url": "https://gitlab.com/group/project/-/issues/123"
+}
+
+# Get merge request with linked issues
+gitlab-cli mr get-issues -m 456 --json
+
+# List all open issues in JSON
+gitlab-cli issues list --state opened --json
 ```
+
+The JSON output includes all relevant fields from the GitLab API, making it easy to integrate with other tools or scripts.

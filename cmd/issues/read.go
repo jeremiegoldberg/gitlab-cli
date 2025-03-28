@@ -11,7 +11,7 @@ import (
 
 // ReadIssue gets an issue and returns it as a structured type
 func ReadIssue(projectID, issueIID int) (*types.Issue, error) {
-	issue, _, err := client.Issues.GetIssue(projectID, issueIID)
+	issue, _, err := client.Issues.GetIssue(projectID, issueIID, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get issue: %v", err)
 	}
@@ -44,6 +44,21 @@ func ReadIssuesAsJSON(opts *gitlab.ListIssuesOptions) (string, error) {
 	jsonData, err := json.MarshalIndent(issues, "", "  ")
 	if err != nil {
 		return "", fmt.Errorf("failed to marshal issues: %v", err)
+	}
+
+	return string(jsonData), nil
+}
+
+// ReadIssueAsJSON gets an issue and returns it as formatted JSON
+func ReadIssueAsJSON(projectID, issueIID int) (string, error) {
+	issue, err := ReadIssue(projectID, issueIID)
+	if err != nil {
+		return "", err
+	}
+
+	jsonData, err := json.MarshalIndent(issue, "", "  ")
+	if err != nil {
+		return "", fmt.Errorf("failed to marshal issue: %v", err)
 	}
 
 	return string(jsonData), nil

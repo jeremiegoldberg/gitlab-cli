@@ -49,6 +49,22 @@ func ReadMergeRequestsAsJSON(opts *gitlab.ListMergeRequestsOptions) (string, err
 	return string(jsonData), nil
 }
 
+// ReadMergeRequestAsJSON gets a merge request and returns it as formatted JSON
+func ReadMergeRequestAsJSON(projectID, mrIID int) (string, error) {
+	mr, err := ReadMergeRequest(projectID, mrIID)
+	if err != nil {
+		return "", err
+	}
+
+	jsonData, err := json.MarshalIndent(mr, "", "  ")
+	if err != nil {
+		return "", fmt.Errorf("failed to marshal merge request: %v", err)
+	}
+
+	return string(jsonData), nil
+}
+
+// Helper function to convert GitLab MR to our type
 func convertGitLabMR(mr *gitlab.MergeRequest) *types.MergeRequest {
 	return &types.MergeRequest{
 		IID:          mr.IID,
