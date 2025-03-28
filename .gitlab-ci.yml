@@ -1,0 +1,44 @@
+image: golang:1.21
+
+variables:
+  GOPATH: $CI_PROJECT_DIR/.go
+  GO111MODULE: "on"
+
+stages:
+  - test
+  - build
+  - example
+
+cache:
+  paths:
+    - .go/pkg/mod/
+
+before_script:
+  - mkdir -p .go
+  - go mod download
+
+test:
+  stage: test
+  script:
+    - go test ./... -v -cover
+
+build:
+  stage: build
+  script:
+    - go build -o gitlab-manager
+  artifacts:
+    paths:
+      - gitlab-manager
+
+example-usage:
+  stage: example
+  script:
+    - ./gitlab-manager list-issues  # Will automatically use current project
+    - ./gitlab-manager list-mrs     # Will automatically use current project
+    - |
+      ./gitlab-manager create-issue \
+        -t "Pipeline Issue" \
+        -d "This issue was created by pipeline ${CI_PIPELINE_ID}"
+        # No need to specify project ID, will use CI_PROJECT_ID
+  only:
+    - main 
