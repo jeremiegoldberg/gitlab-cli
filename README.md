@@ -38,6 +38,9 @@ gitlab-cli issues list --project 123
 # Get issue details
 gitlab-cli issues get -i 123
 
+# Get issue description
+gitlab-cli issues get-description -i 123
+
 # Create issue
 gitlab-cli issues create \
   --title "New Issue" \
@@ -64,6 +67,9 @@ gitlab-cli mr list --state opened --target main
 
 # Get MR details
 gitlab-cli mr get -m 123
+
+# Get MR description
+gitlab-cli mr get-description -m 123
 
 # Get issues linked to an MR
 gitlab-cli mr get-issues -m 123
@@ -221,6 +227,8 @@ Commands:
 - `get`: Get issue details
   - `--issue, -i`: Issue IID (required)
   - `--project`: Project ID
+- `get-description`: Get issue description
+  - `--issue, -i`: Issue IID (required)
 - `create`: Create new issue
   - `--title, -t`: Issue title (required)
   - `--description, -d`: Issue description
@@ -245,6 +253,8 @@ Commands:
   - `--state`: Filter by state (opened/closed/merged/all)
   - `--target`: Filter by target branch
 - `get`: Get MR details
+  - `--mr, -m`: MR IID (required)
+- `get-description`: Get MR description
   - `--mr, -m`: MR IID (required)
 - `get-issues`: Get issues linked to an MR
   - `--mr, -m`: MR IID (required)

@@ -54,13 +54,19 @@ var (
 		Short: "Close a merge request",
 		Run:   runClose,
 	}
+
+	getDescriptionCmd = &cobra.Command{
+		Use:   "get-description",
+		Short: "Get merge request description",
+		Run:   runGetDescription,
+	}
 )
 
 func init() {
 	client = utils.GetClient()
 
 	// Add subcommands
-	MergeRequestsCmd.AddCommand(listCmd, getCmd, createCmd, updateCmd, mergeCmd, closeCmd)
+	MergeRequestsCmd.AddCommand(listCmd, getCmd, createCmd, updateCmd, mergeCmd, closeCmd, getDescriptionCmd)
 
 	// List flags
 	listCmd.Flags().IntP("project", "p", 0, "Project ID")
@@ -100,6 +106,10 @@ func init() {
 	closeCmd.Flags().IntP("project", "p", 0, "Project ID")
 	closeCmd.Flags().IntP("mr", "m", 0, "Merge Request IID")
 	closeCmd.MarkFlagRequired("mr")
+
+	// Get description flags
+	getDescriptionCmd.Flags().IntP("mr", "m", 0, "Merge Request IID")
+	getDescriptionCmd.MarkFlagRequired("mr")
 }
 
 func runList(cmd *cobra.Command, args []string) {
@@ -233,4 +243,16 @@ func runClose(cmd *cobra.Command, args []string) {
 	}
 
 	fmt.Printf("Closed merge request #%d\n", mr.IID)
+}
+
+func runGetDescription(cmd *cobra.Command, args []string) {
+	projectID, _ := utils.GetProjectID(cmd)
+	mrIID, _ := cmd.Flags().GetInt("mr")
+
+	description, err := GetMRDescription(projectID, mrIID)
+	if err != nil {
+		log.Fatalf("Failed to get merge request description: %v", err)
+	}
+
+	fmt.Println(description)
 }

@@ -48,13 +48,19 @@ var (
 		Short: "Delete an issue",
 		Run:   runDelete,
 	}
+
+	getDescriptionCmd = &cobra.Command{
+		Use:   "get-description",
+		Short: "Get issue description",
+		Run:   runGetDescription,
+	}
 )
 
 func init() {
 	client = utils.GetClient()
 
 	// Add subcommands
-	IssuesCmd.AddCommand(listCmd, getCmd, createCmd, updateCmd, deleteCmd)
+	IssuesCmd.AddCommand(listCmd, getCmd, createCmd, updateCmd, deleteCmd, getDescriptionCmd)
 
 	// List flags
 	listCmd.Flags().IntP("project", "p", 0, "Project ID")
@@ -84,6 +90,10 @@ func init() {
 	deleteCmd.Flags().IntP("project", "p", 0, "Project ID")
 	deleteCmd.Flags().IntP("issue", "i", 0, "Issue IID")
 	deleteCmd.MarkFlagRequired("issue")
+
+	// Get description flags
+	getDescriptionCmd.Flags().IntP("issue", "i", 0, "Issue IID")
+	getDescriptionCmd.MarkFlagRequired("issue")
 }
 
 func runList(cmd *cobra.Command, args []string) {
@@ -190,4 +200,16 @@ func runDelete(cmd *cobra.Command, args []string) {
 	}
 
 	fmt.Printf("Deleted issue #%d\n", issueIID)
+}
+
+func runGetDescription(cmd *cobra.Command, args []string) {
+	projectID, _ := utils.GetProjectID(cmd)
+	issueIID, _ := cmd.Flags().GetInt("issue")
+
+	description, err := GetIssueDescription(projectID, issueIID)
+	if err != nil {
+		log.Fatalf("Failed to get issue description: %v", err)
+	}
+
+	fmt.Println(description)
 }
