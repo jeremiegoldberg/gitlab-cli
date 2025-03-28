@@ -2,6 +2,14 @@
 
 A command-line interface tool for managing GitLab resources (issues, merge requests, and milestones) with built-in GitLab CI support.
 
+## Features
+
+- Full CRUD operations for issues, merge requests, and milestones
+- Automatic issue linking in merge requests
+- GitLab CI integration
+- JSON output support
+- Detailed description viewing
+
 ## Installation
 
 ```bash
@@ -26,6 +34,39 @@ export GITLAB_TOKEN="your-personal-access-token"
 ```
 
 ## Usage
+
+### Resource Descriptions
+
+You can view the full description of any resource:
+
+```bash
+# Get issue description
+gitlab-cli issues get-description -i 123
+
+# Get merge request description
+gitlab-cli mr get-description -m 456
+```
+
+### Issue Linking
+
+The tool automatically detects issue references in merge request descriptions. Supported formats:
+
+- Simple reference: `#123`
+- Action keywords: `fixes #123`, `closes #456`, `resolves #789`
+- Other references: `references #101`, `refs #202`, `see #303`
+
+```bash
+# Create MR with linked issues
+gitlab-cli mr create \
+  --source feature \
+  --target main \
+  --title "New Feature" \
+  --description "This MR fixes #123 and closes #456"
+
+# View linked issues
+gitlab-cli mr get-issues -m 789
+gitlab-cli mr get-issues -m 789 --json
+```
 
 ### Issues
 
@@ -129,59 +170,6 @@ gitlab-cli milestones update \
 
 # Delete milestone
 gitlab-cli milestones delete --milestone 123
-```
-
-## Issue Linking
-
-The tool supports GitLab's issue linking syntax in merge request descriptions. You can reference issues using the following formats:
-
-- Simple reference: `#123`
-- Fixes: `fixes #123`
-- Closes: `closes #123`
-- Other supported keywords: `resolves`, `references`, `refs`, `re`, `see`, `addresses`
-
-Example usage:
-
-```bash
-# Create MR with linked issues
-gitlab-cli mr create \
-  --source feature \
-  --target main \
-  --title "Feature implementation" \
-  --description "This MR implements the feature requested in #123 and fixes #456"
-
-# Get linked issues
-gitlab-cli mr get-issues -m 789
-```
-
-The `get-issues` command will show all issues referenced in the merge request description.
-
-### JSON Output
-
-You can get the linked issues in JSON format using the `--json` flag:
-
-```bash
-gitlab-cli mr get-issues -m 123 --json
-```
-
-Example output:
-```json
-[
-  {
-    "iid": 123,
-    "title": "Feature request",
-    "state": "opened",
-    "labels": ["feature", "priority::high"],
-    "web_url": "https://gitlab.com/group/project/-/issues/123"
-  },
-  {
-    "iid": 456,
-    "title": "Bug report",
-    "state": "closed",
-    "labels": ["bug"],
-    "web_url": "https://gitlab.com/group/project/-/issues/456"
-  }
-]
 ```
 
 ## GitLab CI Integration

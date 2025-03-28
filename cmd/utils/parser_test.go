@@ -5,11 +5,13 @@ import (
 	"testing"
 )
 
+// TestGetIssueIDsFromDescription tests the issue ID extraction from text
+// It verifies various formats of issue references are correctly parsed
 func TestGetIssueIDsFromDescription(t *testing.T) {
 	tests := []struct {
-		name        string
-		description string
-		want        []int
+		name        string // Test case name
+		description string // Input text
+		want        []int  // Expected issue IDs
 	}{
 		{
 			name:        "empty description",
@@ -73,13 +75,15 @@ func TestGetIssueIDsFromDescription(t *testing.T) {
 	}
 }
 
+// TestGetLinkedIssues tests the GetLinkedIssues function
+// It verifies that issue IDs are correctly extracted and returned
 func TestGetLinkedIssues(t *testing.T) {
 	tests := []struct {
-		name        string
-		projectID   int
-		description string
-		want        []int
-		wantErr     bool
+		name        string // Test case name
+		projectID   int    // Project ID input
+		description string // Description input
+		want        []int  // Expected issue IDs
+		wantErr     bool   // Whether an error is expected
 	}{
 		{
 			name:        "empty description",

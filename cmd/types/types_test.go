@@ -4,11 +4,14 @@ import (
 	"testing"
 )
 
+// TestMergeRequest_GetDescription tests the GetDescription method of MergeRequest
+// It verifies that empty descriptions return "No description provided" and
+// non-empty descriptions are returned as-is
 func TestMergeRequest_GetDescription(t *testing.T) {
 	tests := []struct {
-		name        string
-		description string
-		want        string
+		name        string // Test case name
+		description string // Input description
+		want        string // Expected output
 	}{
 		{
 			name:        "empty description",
@@ -32,11 +35,14 @@ func TestMergeRequest_GetDescription(t *testing.T) {
 	}
 }
 
+// TestIssue_GetDescription tests the GetDescription method of Issue
+// It verifies that empty descriptions return "No description provided" and
+// non-empty descriptions are returned as-is
 func TestIssue_GetDescription(t *testing.T) {
 	tests := []struct {
-		name        string
-		description string
-		want        string
+		name        string // Test case name
+		description string // Input description
+		want        string // Expected output
 	}{
 		{
 			name:        "empty description",
@@ -60,11 +66,14 @@ func TestIssue_GetDescription(t *testing.T) {
 	}
 }
 
+// TestMergeRequest_GetLinkedIssueIIDs tests the GetLinkedIssueIIDs method
+// It verifies that issue IDs are correctly extracted from MR descriptions
+// including cases with no issues, single issues, multiple issues, and duplicates
 func TestMergeRequest_GetLinkedIssueIIDs(t *testing.T) {
 	tests := []struct {
-		name        string
-		description string
-		want        []int
+		name        string // Test case name
+		description string // Input description
+		want        []int  // Expected issue IDs
 	}{
 		{
 			name:        "no issues",
@@ -96,7 +105,7 @@ func TestMergeRequest_GetLinkedIssueIIDs(t *testing.T) {
 				t.Errorf("MergeRequest.GetLinkedIssueIIDs() = %v, want %v", got, tt.want)
 				return
 			}
-			// Create a map for easier comparison
+			// Create a map for easier comparison of unique IDs
 			wantMap := make(map[int]bool)
 			for _, id := range tt.want {
 				wantMap[id] = true
