@@ -65,6 +65,10 @@ gitlab-cli mr list --state opened --target main
 # Get MR details
 gitlab-cli mr get -m 123
 
+# Get issues linked to an MR
+gitlab-cli mr get-issues -m 123
+gitlab-cli mr get-issues -m 123 --json
+
 # Create MR
 gitlab-cli mr create \
   --source feature-branch \
@@ -72,6 +76,13 @@ gitlab-cli mr create \
   --title "New Feature" \
   --description "Feature description" \
   --remove-source
+
+# Create MR with linked issues
+gitlab-cli mr create \
+  --source feature-branch \
+  --target main \
+  --title "New Feature" \
+  --description "This MR fixes #123 and closes #456"
 
 # Update MR
 gitlab-cli mr update \
@@ -112,6 +123,59 @@ gitlab-cli milestones update \
 
 # Delete milestone
 gitlab-cli milestones delete --milestone 123
+```
+
+## Issue Linking
+
+The tool supports GitLab's issue linking syntax in merge request descriptions. You can reference issues using the following formats:
+
+- Simple reference: `#123`
+- Fixes: `fixes #123`
+- Closes: `closes #123`
+- Other supported keywords: `resolves`, `references`, `refs`, `re`, `see`, `addresses`
+
+Example usage:
+
+```bash
+# Create MR with linked issues
+gitlab-cli mr create \
+  --source feature \
+  --target main \
+  --title "Feature implementation" \
+  --description "This MR implements the feature requested in #123 and fixes #456"
+
+# Get linked issues
+gitlab-cli mr get-issues -m 789
+```
+
+The `get-issues` command will show all issues referenced in the merge request description.
+
+### JSON Output
+
+You can get the linked issues in JSON format using the `--json` flag:
+
+```bash
+gitlab-cli mr get-issues -m 123 --json
+```
+
+Example output:
+```json
+[
+  {
+    "iid": 123,
+    "title": "Feature request",
+    "state": "opened",
+    "labels": ["feature", "priority::high"],
+    "web_url": "https://gitlab.com/group/project/-/issues/123"
+  },
+  {
+    "iid": 456,
+    "title": "Bug report",
+    "state": "closed",
+    "labels": ["bug"],
+    "web_url": "https://gitlab.com/group/project/-/issues/456"
+  }
+]
 ```
 
 ## GitLab CI Integration
@@ -182,6 +246,9 @@ Commands:
   - `--target`: Filter by target branch
 - `get`: Get MR details
   - `--mr, -m`: MR IID (required)
+- `get-issues`: Get issues linked to an MR
+  - `--mr, -m`: MR IID (required)
+  - `--json`: Get JSON output
 - `create`: Create new MR
   - `--source, -s`: Source branch (required)
   - `--target, -t`: Target branch (default: main)
