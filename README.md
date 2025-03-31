@@ -1,4 +1,4 @@
-# gitlab-cli
+# gitlab-manager
 
 A command-line interface tool for managing GitLab resources (issues, merge requests, and milestones) with built-in GitLab CI support.
 
@@ -6,6 +6,8 @@ A command-line interface tool for managing GitLab resources (issues, merge reque
 
 - Full CRUD operations for issues, merge requests, and milestones
 - Automatic issue linking in merge requests
+- Changelog entry validation
+- Merge request blocking/unblocking
 - GitLab CI integration
 - Structured data output (both human-readable and JSON formats)
 - Detailed description viewing
@@ -14,287 +16,170 @@ A command-line interface tool for managing GitLab resources (issues, merge reque
 
 ```bash
 # Clone the repository
-git clone https://gitlab.com/your-username/gitlab-cli.git
+git clone https://gitlab.com/your-username/gitlab-manager.git
 
 # Build the binary
-cd gitlab-cli
-go build -o gitlab-cli
+cd gitlab-manager
+go build -o gitlab-manager
 ```
 
 ## Authentication
 
-The tool requires authentication with GitLab. Set one of these environment variables:
+The tool supports two authentication methods:
+1. GitLab Personal Access Token (for local use)
+2. GitLab CI Job Token (for CI/CD pipelines)
 
 ```bash
-# For GitLab CI (automatically used in GitLab CI/CD pipelines)
-export CI_JOB_TOKEN="your-ci-job-token"
+# Using personal access token
+export GITLAB_TOKEN=your_personal_access_token
 
-# For local development (Personal Access Token)
-export GITLAB_TOKEN="your-personal-access-token"
+# In GitLab CI, CI_JOB_TOKEN is automatically available
 ```
 
 ## Usage
 
-### Resource Descriptions
-
-You can view the full description of any resource:
+### Merge Requests
 
 ```bash
-# Get issue description
-gitlab-cli issues get-description -i 123
+# List merge requests
+gitlab-manager mr list
+gitlab-manager mr list --state opened
+gitlab-manager mr list --target main
 
-# Get merge request description
-gitlab-cli mr get-description -m 456
-```
+# Get merge request details
+gitlab-manager mr get -m 123
 
-### Issue Linking
-
-The tool automatically detects issue references in merge request descriptions. Supported formats:
-
-- Simple reference: `#123`
-- Action keywords: `fixes #123`, `closes #456`, `resolves #789`
-- Other references: `references #101`, `refs #202`, `see #303`
-
-```bash
-# Create MR with linked issues
-gitlab-cli mr create \
-  --source feature \
+# Create merge request
+gitlab-manager mr create \
+  --source feature-branch \
   --target main \
-  --title "New Feature" \
-  --description "This MR fixes #123 and closes #456"
+  --title "Add new feature" \
+  --description "Implements..." \
+  --remove-source
 
-# View linked issues
-gitlab-cli mr get-issues -m 789
-gitlab-cli mr get-issues -m 789 --json
+# Update merge request
+gitlab-manager mr update -m 123 --title "Updated title"
+
+# Merge a request
+gitlab-manager mr merge -m 123 --message "Custom merge commit message"
+
+# Close a request
+gitlab-manager mr close -m 123
+
+# Get linked issues
+gitlab-manager mr get-issues -m 123 [--json]
+
+# Check changelog entries
+gitlab-manager mr check-changelog -m 123
+
+# Block/Unblock merge requests
+gitlab-manager mr block -m 123 -r "Needs security review"
+gitlab-manager mr unblock -m 123
 ```
 
 ### Issues
 
 ```bash
 # List issues
-gitlab-cli issues list
-gitlab-cli issues list --state opened
-gitlab-cli issues list --project 123
+gitlab-manager issues list
+gitlab-manager issues list --state opened
 
 # Get issue details
-gitlab-cli issues get -i 123
-gitlab-cli issues get -i 123 --json
-
-# Get issue description
-gitlab-cli issues get-description -i 123
+gitlab-manager issues get -i 123 [--json]
 
 # Create issue
-gitlab-cli issues create \
-  --title "New Issue" \
-  --description "Issue description" \
-  --project 123 \
-  --labels "bug,urgent"
+gitlab-manager issues create \
+  --title "Bug report" \
+  --description "Found a bug..." \
+  --labels bug,priority::high
 
 # Update issue
-gitlab-cli issues update \
-  --issue 123 \
-  --title "Updated Title" \
-  --state "close"
+gitlab-manager issues update -i 123 --state close
 
 # Delete issue
-gitlab-cli issues delete --issue 123
-```
-
-### Merge Requests
-
-```bash
-# List merge requests
-gitlab-cli mr list
-gitlab-cli mr list --state opened --target main
-
-# Get MR details
-gitlab-cli mr get -m 123
-
-# Get MR description
-gitlab-cli mr get-description -m 123
-
-# Get issues linked to an MR
-gitlab-cli mr get-issues -m 123
-gitlab-cli mr get-issues -m 123 --json
-
-# Create MR
-gitlab-cli mr create \
-  --source feature-branch \
-  --target main \
-  --title "New Feature" \
-  --description "Feature description" \
-  --remove-source
-
-# Create MR with linked issues
-gitlab-cli mr create \
-  --source feature-branch \
-  --target main \
-  --title "New Feature" \
-  --description "This MR fixes #123 and closes #456"
-
-# Update MR
-gitlab-cli mr update \
-  --mr 123 \
-  --title "Updated Title" \
-  --target develop
-
-# Merge MR
-gitlab-cli mr merge \
-  --mr 123 \
-  --message "Merge commit message"
-
-# Close MR
-gitlab-cli mr close --mr 123
+gitlab-manager issues delete -i 123
 ```
 
 ### Milestones
 
 ```bash
 # List milestones
-gitlab-cli milestones list
-gitlab-cli milestones list --state active
+gitlab-manager milestones list
+gitlab-manager milestones list --state active
 
 # Get milestone details
-gitlab-cli milestones get -m 123
+gitlab-manager milestones get -m 123 [--json]
 
 # Create milestone
-gitlab-cli milestones create \
+gitlab-manager milestones create \
   --title "v1.0.0" \
   --description "First release" \
-  --due-date "2024-12-31"
+  --due-date 2024-12-31
 
 # Update milestone
-gitlab-cli milestones update \
-  --milestone 123 \
-  --title "v1.0.1" \
-  --state "close"
+gitlab-manager milestones update -m 123 --state close
 
 # Delete milestone
-gitlab-cli milestones delete --milestone 123
+gitlab-manager milestones delete -m 123
 ```
 
-## GitLab CI Integration
+## Changelog Validation
 
-The tool automatically detects when it's running in GitLab CI and uses the appropriate configuration. Example `.gitlab-ci.yml`:
+The tool enforces changelog entries in merge requests or their linked issues. Valid changelog entries must start with one of:
+- [Feature]
+- [Improvement]
+- [Fix]
+- [Infra]
+- [No-Changelog-Entry]
 
+Example usage in CI:
 ```yaml
-create_issue:
+validate_mr:
   script:
-    - gitlab-cli issues create \
-        --title "Pipeline Issue" \
-        --description "Created from pipeline"
-        # Project ID is automatically detected in CI
+    - gitlab-manager mr check-changelog  # Will use CI_MERGE_REQUEST_IID
+    - gitlab-manager mr get-issues       # Will use CI_MERGE_REQUEST_IID
+```
 
-list_mrs:
+## Merge Request Blocking
+
+You can block merge requests to prevent them from being merged:
+
+```bash
+# Block a merge request
+gitlab-manager mr block -m 123 -r "Needs security review"
+
+# Unblock when ready
+gitlab-manager mr unblock -m 123
+```
+
+When a merge request is blocked:
+1. Its title is prefixed with [BLOCKED]
+2. A note is added with the blocking reason
+3. An unblock note is added when unblocked
+
+## CI/CD Integration
+
+The tool automatically detects when running in GitLab CI and:
+1. Uses CI_JOB_TOKEN for authentication
+2. Uses CI_PROJECT_ID for project context
+3. Adds CI metadata to created resources
+4. Can block merges based on validation rules
+
+Example CI configuration:
+```yaml
+validate_mr:
   script:
-    - gitlab-cli mr list --state opened
+    - gitlab-manager mr check-changelog  # Will use CI_MERGE_REQUEST_IID
+    - gitlab-manager mr get-issues       # Will use CI_MERGE_REQUEST_IID
 ```
-
-### CI Features
-
-- Automatic authentication using `CI_JOB_TOKEN`
-- Project ID detection using `CI_PROJECT_ID`
-- CI metadata added to created issues
-- GitLab API URL configuration using `CI_API_V4_URL`
-
-## Command Reference
-
-### Global Flags
-
-- `--project, -p`: Project ID (optional in CI environment)
-
-### Issues Commands
-
-```bash
-gitlab-cli issues [command] [flags]
-```
-
-Commands:
-- `list`: List issues
-  - `--state`: Filter by state (opened/closed)
-  - `--project`: Project ID
-  - `--json, -j`: Output in JSON format
-- `get`: Get issue details
-  - `--issue, -i`: Issue IID (required)
-  - `--project`: Project ID
-  - `--json, -j`: Output in JSON format
-- `get-description`: Get issue description
-  - `--issue, -i`: Issue IID (required)
-- `create`: Create new issue
-  - `--title, -t`: Issue title (required)
-  - `--description, -d`: Issue description
-  - `--labels, -l`: Comma-separated labels
-  - `--project`: Project ID
-- `update`: Update issue
-  - `--issue, -i`: Issue IID (required)
-  - `--title`: New title
-  - `--description`: New description
-  - `--state`: New state (close/reopen)
-- `delete`: Delete issue
-  - `--issue, -i`: Issue IID (required)
-
-### Merge Requests Commands
-
-```bash
-gitlab-cli mr [command] [flags]
-```
-
-Commands:
-- `list`: List merge requests
-  - `--state`: Filter by state (opened/closed/merged/all)
-  - `--target`: Filter by target branch
-  - `--json, -j`: Output in JSON format
-- `get`: Get MR details
-  - `--mr, -m`: MR IID (required)
-  - `--json, -j`: Output in JSON format
-- `get-description`: Get MR description
-  - `--mr, -m`: MR IID (required)
-- `get-issues`: Get issues linked to an MR
-  - `--mr, -m`: MR IID (required)
-  - `--json`: Get JSON output
-- `create`: Create new MR
-  - `--source, -s`: Source branch (required)
-  - `--target, -t`: Target branch (default: main)
-  - `--title, -T`: MR title (required)
-  - `--description, -d`: MR description
-  - `--remove-source, -r`: Remove source branch when merged
-- `merge`: Merge an MR
-  - `--mr, -m`: MR IID (required)
-  - `--message, -M`: Merge commit message
-- `close`: Close an MR
-  - `--mr, -m`: MR IID (required)
-
-### Milestones Commands
-
-```bash
-gitlab-cli milestones [command] [flags]
-```
-
-Commands:
-- `list`: List milestones
-  - `--state`: Filter by state (active/closed)
-  - `--json, -j`: Output in JSON format
-- `get`: Get milestone details
-  - `--milestone, -m`: Milestone ID (required)
-  - `--json, -j`: Output in JSON format
-- `create`: Create milestone
-  - `--title, -t`: Milestone title (required)
-  - `--description, -d`: Description
-  - `--due-date, -D`: Due date (YYYY-MM-DD)
-- `update`: Update milestone
-  - `--milestone, -m`: Milestone ID (required)
-  - `--title`: New title
-  - `--description`: New description
-  - `--due-date`: New due date
-  - `--state`: State event (close/activate)
 
 ## JSON Output
 
-Most read operations support JSON output format. This is useful for scripting or when you need to process the data programmatically.
+Many commands support JSON output for integration with other tools:
 
 ```bash
 # Get issue in JSON format
-gitlab-cli issues get -i 123 --json
+gitlab-manager issues get -i 123 --json
 
 # Example output:
 {
@@ -309,10 +194,10 @@ gitlab-cli issues get -i 123 --json
 }
 
 # Get merge request with linked issues
-gitlab-cli mr get-issues -m 456 --json
+gitlab-manager mr get-issues -m 456 --json
 
 # List all open issues in JSON
-gitlab-cli issues list --state opened --json
+gitlab-manager issues list --state opened --json
 ```
 
 The JSON output includes all relevant fields from the GitLab API, making it easy to integrate with other tools or scripts.
