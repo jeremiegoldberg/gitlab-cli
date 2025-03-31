@@ -3,6 +3,8 @@ package mergerequests
 import (
 	"fmt"
 	"log"
+	"os"
+	"strings"
 
 	"gitlab-manager/cmd/utils"
 
@@ -66,13 +68,31 @@ var (
 		Short: "Get issues linked to a merge request",
 		Run:   runGetIssues,
 	}
+
+	checkChangelogCmd = &cobra.Command{
+		Use:   "check-changelog",
+		Short: "Check for changelog entries in MR and linked issues",
+		Run:   runCheckChangelog,
+	}
+
+	blockCmd = &cobra.Command{
+		Use:   "block",
+		Short: "Block a merge request from being merged",
+		Run:   runBlock,
+	}
+
+	unblockCmd = &cobra.Command{
+		Use:   "unblock",
+		Short: "Unblock a merge request to allow merging",
+		Run:   runUnblock,
+	}
 )
 
 func init() {
 	client = utils.GetClient()
 
 	// Add subcommands
-	MergeRequestsCmd.AddCommand(listCmd, getCmd, createCmd, updateCmd, mergeCmd, closeCmd, getDescriptionCmd, getIssuesCmd)
+	MergeRequestsCmd.AddCommand(listCmd, getCmd, createCmd, updateCmd, mergeCmd, closeCmd, getDescriptionCmd, getIssuesCmd, checkChangelogCmd, blockCmd, unblockCmd)
 
 	// List flags
 	listCmd.Flags().IntP("project", "p", 0, "Project ID")
@@ -121,6 +141,20 @@ func init() {
 	getIssuesCmd.Flags().IntP("mr", "m", 0, "Merge Request IID")
 	getIssuesCmd.Flags().BoolP("json", "j", false, "Output as JSON")
 	getIssuesCmd.MarkFlagRequired("mr")
+
+	// Check changelog flags
+	checkChangelogCmd.Flags().IntP("mr", "m", 0, "Merge Request IID")
+	checkChangelogCmd.MarkFlagRequired("mr")
+
+	// Block flags
+	blockCmd.Flags().IntP("mr", "m", 0, "Merge Request IID")
+	blockCmd.Flags().StringP("reason", "r", "", "Reason for blocking")
+	blockCmd.MarkFlagRequired("mr")
+	blockCmd.MarkFlagRequired("reason")
+
+	// Unblock flags
+	unblockCmd.Flags().IntP("mr", "m", 0, "Merge Request IID")
+	unblockCmd.MarkFlagRequired("mr")
 }
 
 func runList(cmd *cobra.Command, args []string) {
@@ -317,4 +351,100 @@ func runGetIssues(cmd *cobra.Command, args []string) {
 	for _, issue := range issues {
 		fmt.Printf("#%d: [%s] %s\n", issue.IID, issue.State, issue.Title)
 	}
+}
+
+func runCheckChangelog(cmd *cobra.Command, args []string) {
+	projectID, _ := utils.GetProjectID(cmd)
+	mrIID, _ := cmd.Flags().GetInt("mr")
+
+	entry, err := GetChangelogEntries(projectID, mrIID)
+	if err != nil {
+		log.Fatalf("Failed to check changelog: %v", err)
+	}
+
+	if entry == changelogError {
+		// If running in CI, add a comment to the MR
+		if os.Getenv("CI") != "" {
+			comment := &gitlab.CreateMergeRequestNoteOptions{
+				Body: gitlab.String(noChangelogComment),
+			}
+			_, _, err := client.Notes.CreateMergeRequestNote(projectID, mrIID, comment)
+			if err != nil {
+				log.Printf("Warning: Failed to add comment to MR: %v", err)
+			}
+		}
+		
+		// Exit with error to block the merge
+		log.Fatal(noChangelogComment)
+	}
+
+	fmt.Printf("Found changelog entry: %s\n", entry)
+}
+
+func runBlock(cmd *cobra.Command, args []string) {
+	projectID, _ := utils.GetProjectID(cmd)
+	mrIID, _ := cmd.Flags().GetInt("mr")
+	reason, _ := cmd.Flags().GetString("reason")
+
+	// First add a blocking note
+	noteOpts := &gitlab.CreateMergeRequestNoteOptions{
+		Body: gitlab.String(fmt.Sprintf("🚫 **Merge Blocked**: %s", reason)),
+	}
+	_, _, err := client.Notes.CreateMergeRequestNote(projectID, mrIID, noteOpts)
+	if err != nil {
+		log.Printf("Warning: Failed to add blocking note: %v", err)
+	}
+
+	// Then update the MR title to indicate it's blocked
+	mr, _, err := client.MergeRequests.GetMergeRequest(projectID, mrIID, nil)
+	if err != nil {
+		log.Fatalf("Failed to get merge request: %v", err)
+	}
+
+	// Add [BLOCKED] prefix if not already present
+	title := mr.Title
+	if !strings.HasPrefix(title, "[BLOCKED]") {
+		title = "[BLOCKED] " + title
+	}
+
+	updateOpts := &gitlab.UpdateMergeRequestOptions{
+		Title: gitlab.String(title),
+	}
+	mr, _, err = client.MergeRequests.UpdateMergeRequest(projectID, mrIID, updateOpts)
+	if err != nil {
+		log.Fatalf("Failed to update merge request: %v", err)
+	}
+
+	fmt.Printf("Blocked merge request #%d\n", mrIID)
+}
+
+func runUnblock(cmd *cobra.Command, args []string) {
+	projectID, _ := utils.GetProjectID(cmd)
+	mrIID, _ := cmd.Flags().GetInt("mr")
+
+	// Add unblocking note
+	noteOpts := &gitlab.CreateMergeRequestNoteOptions{
+		Body: gitlab.String("✅ **Merge Unblocked**"),
+	}
+	_, _, err := client.Notes.CreateMergeRequestNote(projectID, mrIID, noteOpts)
+	if err != nil {
+		log.Printf("Warning: Failed to add unblocking note: %v", err)
+	}
+
+	// Remove [BLOCKED] prefix from title
+	mr, _, err := client.MergeRequests.GetMergeRequest(projectID, mrIID, nil)
+	if err != nil {
+		log.Fatalf("Failed to get merge request: %v", err)
+	}
+
+	title := strings.TrimPrefix(mr.Title, "[BLOCKED] ")
+	updateOpts := &gitlab.UpdateMergeRequestOptions{
+		Title: gitlab.String(title),
+	}
+	mr, _, err = client.MergeRequests.UpdateMergeRequest(projectID, mrIID, updateOpts)
+	if err != nil {
+		log.Fatalf("Failed to update merge request: %v", err)
+	}
+
+	fmt.Printf("Unblocked merge request #%d\n", mrIID)
 }
