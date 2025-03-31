@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"regexp"
-	"strings"
 
 	"gitlab-manager/cmd/types"
 	"gitlab-manager/cmd/issues"
@@ -140,89 +138,4 @@ func GetMRDescription(projectID, mrIID int) (string, error) {
 	}
 
 	return mr.GetDescription(), nil
-}
-
-func GetChangelogEntries(projectID, mrIID int) (string, error) {
-	// First check linked issues
-	issues, err := GetLinkedIssues(projectID, mrIID)
-	if err != nil {
-		return "", fmt.Errorf("failed to get linked issues: %v", err)
-	}
-
-	// If we have linked issues, check their descriptions
-	if len(issues) > 0 {
-		for _, issue := range issues {
-			entry := findChangelogEntry(issue.Description)
-			if entry != "" {
-				return fmt.Sprintf("#%d: %s", issue.IID, entry), nil
-			}
-		}
-		// If no changelog found in any linked issue
-		return changelogError, nil
-	}
-
-	// If no linked issues, check MR description
-	mr, err := ReadMergeRequest(projectID, mrIID)
-	if err != nil {
-		return "", fmt.Errorf("failed to get merge request: %v", err)
-	}
-
-	entry := findChangelogEntry(mr.Description)
-	if entry != "" {
-		return fmt.Sprintf("MR #%d: %s", mr.IID, entry), nil
-	}
-
-	return changelogError, nil
-}
-
-func findChangelogEntry(text string) string {
-	// Define changelog patterns
-	patterns := []string{
-		`\[Feature\].*`,
-		`\[Improvement\].*`,
-		`\[Fix\].*`,
-		`\[Infra\].*`,
-		`\[No-Changelog-Entry\].*`,
-	}
-
-	// Check each line for changelog entries
-	lines := strings.Split(text, "\n")
-	for _, line := range lines {
-		for _, pattern := range patterns {
-			if matched, err := regexp.MatchString(pattern, line); err == nil && matched {
-				return strings.TrimSpace(line)
-			}
-		}
-	}
-	return ""
-}
-
-// Add these functions
-func IsBlocked(projectID, mrIID int) (bool, error) {
-	mr, _, err := client.MergeRequests.GetMergeRequest(projectID, mrIID, nil)
-	if err != nil {
-		return false, fmt.Errorf("failed to get merge request: %v", err)
-	}
-
-	return strings.HasPrefix(mr.Title, "[BLOCKED]"), nil
-}
-
-func GetBlockReason(projectID, mrIID int) (string, error) {
-	notes, _, err := client.Notes.ListMergeRequestNotes(projectID, mrIID, nil)
-	if err != nil {
-		return "", fmt.Errorf("failed to get merge request notes: %v", err)
-	}
-
-	// Look for the most recent blocking note
-	for i := len(notes) - 1; i >= 0; i-- {
-		if strings.Contains(notes[i].Body, "🚫 **Merge Blocked**:") {
-			parts := strings.SplitN(notes[i].Body, ":", 2)
-			if len(parts) == 2 {
-				return strings.TrimSpace(parts[1]), nil
-			}
-			return "", nil
-		}
-	}
-
-	return "", nil
 }
