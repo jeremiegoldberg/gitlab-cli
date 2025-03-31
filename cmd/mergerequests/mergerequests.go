@@ -113,19 +113,21 @@ func init() {
 }
 
 func runList(cmd *cobra.Command, args []string) {
-	opts := &gitlab.ListMergeRequestsOptions{}
-
-	if state, _ := cmd.Flags().GetString("state"); state != "" {
-		opts.State = gitlab.String(state)
-	}
-	if target, _ := cmd.Flags().GetString("target"); target != "" {
-		opts.TargetBranch = gitlab.String(target)
-	}
-
 	// If running in CI, scope to current project
 	if projectID, _ := utils.GetProjectID(cmd); projectID != 0 {
+		// Create project-specific options
+		projectOpts := &gitlab.ListProjectMergeRequestsOptions{}
+		
+		// Copy over the filter options
+		if state, _ := cmd.Flags().GetString("state"); state != "" {
+			projectOpts.State = gitlab.String(state)
+		}
+		if target, _ := cmd.Flags().GetString("target"); target != "" {
+			projectOpts.TargetBranch = gitlab.String(target)
+		}
+
 		// For merge requests, we need to list them within the project
-		mrs, _, err := client.MergeRequests.ListProjectMergeRequests(projectID, opts)
+		mrs, _, err := client.MergeRequests.ListProjectMergeRequests(projectID, projectOpts)
 		if err != nil {
 			log.Fatalf("Failed to list merge requests: %v", err)
 		}
@@ -137,7 +139,16 @@ func runList(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	// If no project ID, list all merge requests
+	// If no project ID, use global options
+	opts := &gitlab.ListMergeRequestsOptions{}
+	if state, _ := cmd.Flags().GetString("state"); state != "" {
+		opts.State = gitlab.String(state)
+	}
+	if target, _ := cmd.Flags().GetString("target"); target != "" {
+		opts.TargetBranch = gitlab.String(target)
+	}
+
+	// List all merge requests
 	mrs, _, err := client.MergeRequests.ListMergeRequests(opts)
 	if err != nil {
 		log.Fatalf("Failed to list merge requests: %v", err)
