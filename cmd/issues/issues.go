@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"gitlab-manager/cmd/utils"
+	"mpg-gitlab/cmd/utils"
 
 	"github.com/spf13/cobra"
 	"github.com/xanzy/go-gitlab"

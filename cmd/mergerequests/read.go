@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"log"
 
-	"gitlab-manager/cmd/types"
-	"gitlab-manager/cmd/issues"
+	"mpg-gitlab/cmd/types"
+	"mpg-gitlab/cmd/issues"
 
 	"github.com/xanzy/go-gitlab"
 )

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"gitlab-manager/cmd/types"
+	"mpg-gitlab/cmd/types"
 
 	"github.com/xanzy/go-gitlab"
 )

@@ -1,4 +1,4 @@
-module gitlab-manager
+module mpg-gitlab
 
 go 1.21
 

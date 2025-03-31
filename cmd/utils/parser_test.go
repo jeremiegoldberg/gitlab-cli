@@ -55,7 +55,12 @@ func TestGetIssueIDsFromDescription(t *testing.T) {
 		},
 		{
 			name:        "various keywords",
-			description: "resolves #123\nrefs #456\nre #789\nsee #101\naddresses #202",
+			description: `This MR:
+				- fixes #123
+				- closes #456
+				- resolves #789
+				- implements #101
+				- addresses #202`,
 			want:        []int{123, 456, 789, 101, 202},
 		},
 		{

@@ -1,4 +1,4 @@
-# gitlab-manager
+# mpg-gitlab
 
 A command-line tool for managing GitLab merge requests with built-in changelog validation and merge blocking capabilities.
 
@@ -26,7 +26,7 @@ A command-line tool for managing GitLab merge requests with built-in changelog v
 ## Installation
 
 ```bash
-go install gitlab.com/your-org/gitlab-manager@latest
+go install mpg-gitlab@latest
 ```
 
 ## Configuration
@@ -46,24 +46,24 @@ export GITLAB_TOKEN=your_personal_access_token
 
 ```bash
 # List merge requests
-gitlab-manager mr list
-gitlab-manager mr list --state opened --target main
+mpg-gitlab mr list
+mpg-gitlab mr list --state opened --target main
 
 # Get merge request details
-gitlab-manager mr get -m 123 [--json]
+mpg-gitlab mr get -m 123 [--json]
 
 # Create merge request
-gitlab-manager mr create \
+mpg-gitlab mr create \
   --source feature-branch \
   --target main \
   --title "Add new feature" \
   --description "Implements..."
 
 # Get linked issues
-gitlab-manager mr get-issues -m 123 [--json]
+mpg-gitlab mr get-issues -m 123 [--json]
 
 # Get MR description
-gitlab-manager mr get-description -m 123
+mpg-gitlab mr get-description -m 123
 ```
 
 ### Changelog Validation
@@ -79,7 +79,7 @@ Valid changelog entries must start with one of:
 
 ```bash
 # Check changelog entries
-gitlab-manager mr check-changelog -m 123
+mpg-gitlab mr check-changelog -m 123
 
 # Example valid entries:
 [Feature] Add new user authentication system
@@ -95,10 +95,10 @@ Control merge request status with blocking:
 
 ```bash
 # Block a merge request
-gitlab-manager mr block -m 123 -r "Needs security review"
+mpg-gitlab mr block -m 123 -r "Needs security review"
 
 # Unblock when ready
-gitlab-manager mr unblock -m 123
+mpg-gitlab mr unblock -m 123
 ```
 
 When blocked:
@@ -115,14 +115,14 @@ validate_merge_request:
   script:
     # Validate changelog
     - |
-      if ! gitlab-manager mr check-changelog -m $CI_MERGE_REQUEST_IID; then
+      if ! mpg-gitlab mr check-changelog -m $CI_MERGE_REQUEST_IID; then
         echo "Missing changelog entry"
-        gitlab-manager mr block -m $CI_MERGE_REQUEST_IID -r "Missing changelog entry"
+        mpg-gitlab mr block -m $CI_MERGE_REQUEST_IID -r "Missing changelog entry"
         exit 1
       fi
 
     # Other validations
-    - gitlab-manager mr get-issues -m $CI_MERGE_REQUEST_IID
+    - mpg-gitlab mr get-issues -m $CI_MERGE_REQUEST_IID
     
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
@@ -134,7 +134,7 @@ Many commands support JSON output for integration with other tools:
 
 ```bash
 # Get MR details in JSON
-gitlab-manager mr get -m 123 --json
+mpg-gitlab mr get -m 123 --json
 
 # Example output:
 {
@@ -149,20 +149,20 @@ gitlab-manager mr get -m 123 --json
 }
 
 # Get linked issues in JSON
-gitlab-manager mr get-issues -m 123 --json
+mpg-gitlab mr get-issues -m 123 --json
 ```
 
 ## Development
 
 ```bash
 # Clone repository
-git clone https://gitlab.com/your-org/gitlab-manager.git
+git clone https://github.com/username/mpg-gitlab.git
 
 # Run tests
 go test ./...
 
 # Build binary
-go build -o gitlab-manager
+go build -o mpg-gitlab
 ```
 
 ## Contributing

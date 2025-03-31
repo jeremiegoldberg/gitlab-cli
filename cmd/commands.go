@@ -6,7 +6,7 @@ import (
 	"os"
 	"strconv"
 
-	"gitlab-manager/cmd/utils"
+	"mpg-gitlab/cmd/utils"
 
 	"github.com/spf13/cobra"
 	"github.com/xanzy/go-gitlab"
@@ -39,7 +39,11 @@ var listIssuesCmd = &cobra.Command{
 		// If running in CI, scope to current project
 		if ciProjectID := os.Getenv("CI_PROJECT_ID"); ciProjectID != "" {
 			pid, _ := strconv.Atoi(ciProjectID)
-			opts.ProjectID = gitlab.Int(pid)
+			// Use IIDs instead of ProjectID
+			opts.Scope = gitlab.String("all")
+			// Create a pointer to the slice
+			iids := []int{pid}
+			opts.IIDs = &iids
 		}
 
 		issues, _, err := client.Issues.ListIssues(opts)
@@ -112,15 +116,22 @@ var listMergeRequestsCmd = &cobra.Command{
 	Use:   "list-mrs",
 	Short: "List merge requests",
 	Run: func(cmd *cobra.Command, args []string) {
-		opts := &gitlab.ListMergeRequestsOptions{}
-
 		// If running in CI, scope to current project
-		if ciProjectID := os.Getenv("CI_PROJECT_ID"); ciProjectID != "" {
-			pid, _ := strconv.Atoi(ciProjectID)
-			opts.ProjectID = gitlab.Int(pid)
+		if projectID, _ := getProjectID(cmd); projectID != 0 {
+			// For merge requests, we need to list them within the project
+			mrs, _, err := client.MergeRequests.ListProjectMergeRequests(projectID, &gitlab.ListProjectMergeRequestsOptions{})
+			if err != nil {
+				log.Fatalf("Failed to list merge requests: %v", err)
+			}
+
+			for _, mr := range mrs {
+				fmt.Printf("#%d: %s [%s]\n", mr.IID, mr.Title, mr.State)
+			}
+			return
 		}
 
-		mrs, _, err := client.MergeRequests.ListMergeRequests(opts)
+		// If no project ID, list all merge requests
+		mrs, _, err := client.MergeRequests.ListMergeRequests(&gitlab.ListMergeRequestsOptions{})
 		if err != nil {
 			log.Fatalf("Failed to list merge requests: %v", err)
 		}

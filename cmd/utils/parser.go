@@ -22,37 +22,26 @@ var (
 	issuePattern = regexp.MustCompile(`(?i)(?:fixes|closes|resolves|references|refs|re|see|addresses)?\s*#(\d+)`)
 )
 
-// GetIssueIDsFromDescription extracts issue IIDs from a merge request description
-// It returns a deduplicated list of issue IDs found in the text
-func GetIssueIDsFromDescription(description string) []int {
-	if description == "" {
-		return nil
-	}
+// GetIssueIDsFromDescription extracts issue IDs from text
+func GetIssueIDsFromDescription(text string) []int {
+	re := regexp.MustCompile(`(?i)(?:fixes|closes|resolves|implements|addresses|re|see|refs?|#)\s*#?(\d+)`)
+	matches := re.FindAllStringSubmatch(text, -1)
 
-	// Find all matches in the description
-	matches := issuePattern.FindAllStringSubmatch(description, -1)
-	if len(matches) == 0 {
-		return nil
-	}
+	seen := make(map[int]bool)
+	var result []int
 
-	// Use map to deduplicate IDs
-	issueMap := make(map[int]bool)
 	for _, match := range matches {
-		// The issue number is in the first capture group
 		if id, err := strconv.Atoi(match[1]); err == nil {
-			issueMap[id] = true
+			if !seen[id] {
+				seen[id] = true
+				result = append(result, id)
+			}
 		}
 	}
 
-	// Convert map to slice
-	var issues []int
-	for id := range issueMap {
-		issues = append(issues, id)
-	}
-
-	// Sort for consistent output
-	sort.Ints(issues)
-	return issues
+	// Sort the results for consistent order
+	sort.Ints(result)
+	return result
 }
 
 // GetLinkedIssues returns the Issue objects for issues referenced in a description

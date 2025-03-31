@@ -5,12 +5,16 @@ import (
 	"testing"
 	"time"
 
-	"gitlab-cli/cmd/types"
+	"mpg-gitlab/cmd/types"
+	"mpg-gitlab/cmd/utils"
 
 	"github.com/xanzy/go-gitlab"
 )
 
 func TestGetIssueDescription(t *testing.T) {
+	mockClient := utils.MockClient()
+	client = mockClient // Set the mock client
+
 	now := time.Now()
 	tests := []struct {
 		name      string
@@ -50,8 +54,11 @@ func TestGetIssueDescription(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// TODO: Mock GitLab client
-			// This requires setting up a mock client implementation
+			// Setup mock response
+			mockClient.Issues.GetIssueFunc = func(pid interface{}, iid int, opt *gitlab.GetIssueOptions) (*gitlab.Issue, *gitlab.Response, error) {
+				return tt.mockIssue, nil, nil
+			}
+
 			got, err := GetIssueDescription(tt.projectID, tt.issueIID)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetIssueDescription() error = %v, wantErr %v", err, tt.wantErr)

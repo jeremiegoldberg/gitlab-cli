@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"gitlab-manager/cmd/types"
+	"mpg-gitlab/cmd/types"
 
 	"github.com/xanzy/go-gitlab"
 )

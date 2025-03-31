@@ -4,22 +4,30 @@ import (
 	"fmt"
 	"os"
 
-	"gitlab-manager/cmd/issues"
-	"gitlab-manager/cmd/mergerequests"
-	"gitlab-manager/cmd/milestones"
+	"mpg-gitlab/cmd/issues"
+	"mpg-gitlab/cmd/mergerequests"
+	"mpg-gitlab/cmd/milestones"
 
 	"github.com/spf13/cobra"
 )
 
-var rootCmd = &cobra.Command{
-	Use:   "gitlab-manager",
-	Short: "A CLI tool to manage GitLab resources",
-}
+var (
+	rootCmd = &cobra.Command{
+		Use:   "mpg-gitlab",
+		Short: "A GitLab CLI tool for managing merge requests",
+		Long: `A command-line interface for GitLab that helps manage
+merge requests, issues, and milestones with features like
+changelog validation and merge blocking.`,
+	}
+)
 
 func init() {
-	rootCmd.AddCommand(issues.IssuesCmd)
-	rootCmd.AddCommand(milestones.MilestonesCmd)
-	rootCmd.AddCommand(mergerequests.MergeRequestsCmd)
+	// Add command groups
+	rootCmd.AddCommand(
+		mergerequests.MergeRequestsCmd,
+		issues.IssuesCmd,
+		milestones.MilestonesCmd,
+	)
 }
 
 func main() {
