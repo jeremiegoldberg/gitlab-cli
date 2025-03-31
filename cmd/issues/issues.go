@@ -108,7 +108,11 @@ func runList(cmd *cobra.Command, args []string) {
 
 	// If running in CI, scope to current project
 	if projectID, _ := utils.GetProjectID(cmd); projectID != 0 {
-		opts.ProjectID = gitlab.Int(projectID)
+		// Use IIDs instead of ProjectID
+		opts.Scope = gitlab.String("all")
+		// Create a pointer to the slice
+		iids := []int{projectID}
+		opts.IIDs = &iids
 	}
 
 	issues, _, err := client.Issues.ListIssues(opts)
@@ -165,7 +169,10 @@ func runCreate(cmd *cobra.Command, args []string) {
 	}
 
 	if labels != "" {
-		opts.Labels = &[]string{labels}
+		labelsList := strings.Split(labels, ",")
+		labelsPtr := new(gitlab.Labels)
+		*labelsPtr = gitlab.Labels(labelsList)
+		opts.Labels = labelsPtr
 	}
 
 	// Add CI metadata if available

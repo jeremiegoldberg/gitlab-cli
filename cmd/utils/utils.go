@@ -40,6 +40,7 @@ func GetProjectID(cmd *cobra.Command) (int, error) {
 		if ciProjectID := os.Getenv("CI_PROJECT_ID"); ciProjectID != "" {
 			return strconv.Atoi(ciProjectID)
 		}
+		return 0, fmt.Errorf("project ID is required. Provide --project flag or run in GitLab CI")
 	}
 	return projectID, nil
 }

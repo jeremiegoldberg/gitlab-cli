@@ -27,4 +27,32 @@ type MockIssuesService struct {
 	DeleteIssueFunc func(pid interface{}, issue int, options ...gitlab.RequestOptionFunc) (*gitlab.Response, error)
 }
 
-// Implement similar mock services for MergeRequests and Milestones
+// MockMergeRequestsService provides mock implementations of GitLab MergeRequests API methods
+// Each field is a function that can be customized for testing different scenarios
+type MockMergeRequestsService struct {
+	// GetMergeRequestFunc mocks the GetMergeRequest API call
+	GetMergeRequestFunc func(pid interface{}, mergeRequest int, options ...gitlab.RequestOptionFunc) (*gitlab.MergeRequest, *gitlab.Response, error)
+	// ListMergeRequestsFunc mocks the ListMergeRequests API call
+	ListMergeRequestsFunc func(opt *gitlab.ListMergeRequestsOptions, options ...gitlab.RequestOptionFunc) ([]*gitlab.MergeRequest, *gitlab.Response, error)
+	// CreateMergeRequestFunc mocks the CreateMergeRequest API call
+	CreateMergeRequestFunc func(pid interface{}, opt *gitlab.CreateMergeRequestOptions, options ...gitlab.RequestOptionFunc) (*gitlab.MergeRequest, *gitlab.Response, error)
+	// UpdateMergeRequestFunc mocks the UpdateMergeRequest API call
+	UpdateMergeRequestFunc func(pid interface{}, mergeRequest int, opt *gitlab.UpdateMergeRequestOptions, options ...gitlab.RequestOptionFunc) (*gitlab.MergeRequest, *gitlab.Response, error)
+	// AcceptMergeRequestFunc mocks the AcceptMergeRequest API call
+	AcceptMergeRequestFunc func(pid interface{}, mergeRequest int, opt *gitlab.AcceptMergeRequestOptions, options ...gitlab.RequestOptionFunc) (*gitlab.MergeRequest, *gitlab.Response, error)
+}
+
+// MockMilestonesService provides mock implementations of GitLab Milestones API methods
+// Each field is a function that can be customized for testing different scenarios
+type MockMilestonesService struct {
+	// GetMilestoneFunc mocks the GetMilestone API call
+	GetMilestoneFunc func(pid interface{}, milestone int, options ...gitlab.RequestOptionFunc) (*gitlab.Milestone, *gitlab.Response, error)
+	// ListMilestonesFunc mocks the ListMilestones API call
+	ListMilestonesFunc func(pid interface{}, opt *gitlab.ListMilestonesOptions, options ...gitlab.RequestOptionFunc) ([]*gitlab.Milestone, *gitlab.Response, error)
+	// CreateMilestoneFunc mocks the CreateMilestone API call
+	CreateMilestoneFunc func(pid interface{}, opt *gitlab.CreateMilestoneOptions, options ...gitlab.RequestOptionFunc) (*gitlab.Milestone, *gitlab.Response, error)
+	// UpdateMilestoneFunc mocks the UpdateMilestone API call
+	UpdateMilestoneFunc func(pid interface{}, milestone int, opt *gitlab.UpdateMilestoneOptions, options ...gitlab.RequestOptionFunc) (*gitlab.Milestone, *gitlab.Response, error)
+	// DeleteMilestoneFunc mocks the DeleteMilestone API call
+	DeleteMilestoneFunc func(pid interface{}, milestone int, options ...gitlab.RequestOptionFunc) (*gitlab.Response, error)
+}

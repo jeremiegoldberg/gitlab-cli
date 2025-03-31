@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"gitlab-cli/cmd/types"
+	"gitlab-manager/cmd/types"
 
 	"github.com/xanzy/go-gitlab"
 )
@@ -16,7 +16,7 @@ func ReadIssue(projectID, issueIID int) (*types.Issue, error) {
 		return nil, fmt.Errorf("failed to get issue: %v", err)
 	}
 
-	return convertGitLabIssue(issue), nil
+	return ConvertGitLabIssue(issue), nil
 }
 
 // ReadIssues gets a list of issues and returns them as structured types
@@ -28,7 +28,7 @@ func ReadIssues(opts *gitlab.ListIssuesOptions) ([]types.Issue, error) {
 
 	result := make([]types.Issue, len(issues))
 	for i, issue := range issues {
-		result[i] = *convertGitLabIssue(issue)
+		result[i] = *ConvertGitLabIssue(issue)
 	}
 
 	return result, nil
@@ -64,7 +64,7 @@ func ReadIssueAsJSON(projectID, issueIID int) (string, error) {
 	return string(jsonData), nil
 }
 
-func convertGitLabIssue(issue *gitlab.Issue) *types.Issue {
+func ConvertGitLabIssue(issue *gitlab.Issue) *types.Issue {
 	return &types.Issue{
 		IID:         issue.IID,
 		Title:       issue.Title,

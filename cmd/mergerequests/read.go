@@ -4,7 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"gitlab-cli/cmd/types"
+	"gitlab-manager/cmd/types"
+	"gitlab-manager/cmd/issues"
 
 	"github.com/xanzy/go-gitlab"
 )
@@ -95,16 +96,16 @@ func GetLinkedIssues(projectID, mrIID int) ([]types.Issue, error) {
 		return nil, nil
 	}
 
-	var issues []types.Issue
+	var result []types.Issue
 	for _, iid := range issueIIDs {
-		issue, err := client.Issues.GetIssue(projectID, iid)
+		issue, err := issues.ReadIssue(projectID, iid)
 		if err != nil {
 			continue // Skip issues we can't fetch
 		}
-		issues = append(issues, *convertGitLabIssue(issue))
+		result = append(result, *issue)
 	}
 
-	return issues, nil
+	return result, nil
 }
 
 // GetLinkedIssuesAsJSON returns the referenced issues as JSON

@@ -3,8 +3,9 @@ package milestones
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 
-	"gitlab-cli/cmd/types"
+	"gitlab-manager/cmd/types"
 
 	"github.com/xanzy/go-gitlab"
 )
@@ -64,6 +65,14 @@ func ReadMilestoneAsJSON(projectID, milestoneID int) (string, error) {
 	return string(jsonData), nil
 }
 
+func isoTimeToTime(t *gitlab.ISOTime) *time.Time {
+	if t == nil {
+		return nil
+	}
+	timeVal := time.Time(*t)
+	return &timeVal
+}
+
 func convertGitLabMilestone(milestone *gitlab.Milestone) *types.Milestone {
 	return &types.Milestone{
 		ID:          milestone.ID,
@@ -72,8 +81,8 @@ func convertGitLabMilestone(milestone *gitlab.Milestone) *types.Milestone {
 		State:       milestone.State,
 		CreatedAt:   *milestone.CreatedAt,
 		UpdatedAt:   *milestone.UpdatedAt,
-		DueDate:     milestone.DueDate,
-		StartDate:   milestone.StartDate,
+		DueDate:     isoTimeToTime(milestone.DueDate),
+		StartDate:   isoTimeToTime(milestone.StartDate),
 		WebURL:      milestone.WebURL,
 	}
 }

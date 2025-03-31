@@ -3,7 +3,7 @@ package types
 import (
 	"time"
 
-	"github.com/your-project/utils"
+	"gitlab-manager/cmd/utils"
 )
 
 // Issue represents a GitLab issue with its core attributes

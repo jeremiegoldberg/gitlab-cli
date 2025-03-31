@@ -3,6 +3,7 @@ package milestones
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"gitlab-manager/cmd/utils"
 
@@ -86,6 +87,20 @@ func init() {
 	deleteCmd.MarkFlagRequired("milestone")
 }
 
+func stringToISOTime(date string) *gitlab.ISOTime {
+	if date == "" {
+		return nil
+	}
+	// Parse the date string first
+	parsed, err := time.Parse("2006-01-02", date)
+	if err != nil {
+		return nil
+	}
+	// Convert time.Time to ISOTime
+	isoTime := gitlab.ISOTime(parsed)
+	return &isoTime
+}
+
 func runList(cmd *cobra.Command, args []string) {
 	projectID, _ := utils.GetProjectID(cmd)
 	if projectID == 0 {
@@ -148,7 +163,7 @@ func runCreate(cmd *cobra.Command, args []string) {
 		opts.Description = gitlab.String(description)
 	}
 	if dueDate != "" {
-		opts.DueDate = gitlab.String(dueDate)
+		opts.DueDate = stringToISOTime(dueDate)
 	}
 
 	milestone, _, err := client.Milestones.CreateMilestone(projectID, opts)
@@ -172,7 +187,7 @@ func runUpdate(cmd *cobra.Command, args []string) {
 		opts.Description = gitlab.String(description)
 	}
 	if dueDate, _ := cmd.Flags().GetString("due-date"); dueDate != "" {
-		opts.DueDate = gitlab.String(dueDate)
+		opts.DueDate = stringToISOTime(dueDate)
 	}
 	if state, _ := cmd.Flags().GetString("state"); state != "" {
 		opts.StateEvent = gitlab.String(state)

@@ -6,9 +6,17 @@ import (
 	"os"
 	"strconv"
 
+	"gitlab-manager/cmd/utils"
+
 	"github.com/spf13/cobra"
 	"github.com/xanzy/go-gitlab"
 )
+
+var client *gitlab.Client
+
+func init() {
+	client = utils.GetClient()
+}
 
 // getProjectID tries to get project ID from flag or CI variable
 func getProjectID(cmd *cobra.Command) (int, error) {

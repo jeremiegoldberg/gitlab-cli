@@ -124,9 +124,20 @@ func runList(cmd *cobra.Command, args []string) {
 
 	// If running in CI, scope to current project
 	if projectID, _ := utils.GetProjectID(cmd); projectID != 0 {
-		opts.ProjectID = gitlab.Int(projectID)
+		// For merge requests, we need to list them within the project
+		mrs, _, err := client.MergeRequests.ListProjectMergeRequests(projectID, opts)
+		if err != nil {
+			log.Fatalf("Failed to list merge requests: %v", err)
+		}
+
+		for _, mr := range mrs {
+			fmt.Printf("#%d: [%s] %s\n", mr.IID, mr.State, mr.Title)
+			fmt.Printf("  %s -> %s\n", mr.SourceBranch, mr.TargetBranch)
+		}
+		return
 	}
 
+	// If no project ID, list all merge requests
 	mrs, _, err := client.MergeRequests.ListMergeRequests(opts)
 	if err != nil {
 		log.Fatalf("Failed to list merge requests: %v", err)
