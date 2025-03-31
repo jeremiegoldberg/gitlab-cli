@@ -1,10 +1,12 @@
+// Package utils provides utility functions and mock implementations for testing
 package utils
 
 import (
 	"github.com/xanzy/go-gitlab"
 )
 
-// MockGitLabClient implements a mock GitLab client for testing
+// MockGitLabClient implements a mock GitLab client for testing.
+// It provides mock implementations of the GitLab API services.
 type MockGitLabClient struct {
 	Issues        *MockIssuesService
 	MergeRequests *MockMergeRequestsService
@@ -12,18 +14,31 @@ type MockGitLabClient struct {
 	Notes         *MockNotesService
 }
 
-// MockIssuesService implements mock GitLab Issues API methods
+// MockClient creates a new mock GitLab client for testing.
+// Returns a MockGitLabClient with initialized mock services.
+func MockClient() *MockGitLabClient {
+	return &MockGitLabClient{
+		Issues:        &MockIssuesService{},
+		MergeRequests: &MockMergeRequestsService{},
+		Milestones:    &MockMilestonesService{},
+		Notes:         &MockNotesService{},
+	}
+}
+
+// MockIssuesService implements mock GitLab Issues API methods.
+// Each method can be customized by setting the corresponding Func field.
 type MockIssuesService struct {
-	GetIssueFunc        func(pid interface{}, iid int, opts ...gitlab.RequestOptionFunc) (*gitlab.Issue, *gitlab.Response, error)
+	GetIssueFunc        func(pid interface{}, iid int, opt *gitlab.GetIssueOptions) (*gitlab.Issue, *gitlab.Response, error)
 	ListIssuesFunc      func(opt *gitlab.ListIssuesOptions) ([]*gitlab.Issue, *gitlab.Response, error)
 	CreateIssueFunc     func(pid interface{}, opt *gitlab.CreateIssueOptions) (*gitlab.Issue, *gitlab.Response, error)
 	UpdateIssueFunc     func(pid interface{}, iid int, opt *gitlab.UpdateIssueOptions) (*gitlab.Issue, *gitlab.Response, error)
 	DeleteIssueFunc     func(pid interface{}, iid int) (*gitlab.Response, error)
 }
 
-// MockMergeRequestsService implements mock GitLab MergeRequests API methods
+// MockMergeRequestsService implements mock GitLab MergeRequests API methods.
+// Each method can be customized by setting the corresponding Func field.
 type MockMergeRequestsService struct {
-	GetMergeRequestFunc           func(pid interface{}, mriid int, opts ...gitlab.RequestOptionFunc) (*gitlab.MergeRequest, *gitlab.Response, error)
+	GetMergeRequestFunc           func(pid interface{}, mriid int, opt *gitlab.GetIssueOptions) (*gitlab.MergeRequest, *gitlab.Response, error)
 	ListMergeRequestsFunc         func(opt *gitlab.ListMergeRequestsOptions) ([]*gitlab.MergeRequest, *gitlab.Response, error)
 	CreateMergeRequestFunc        func(pid interface{}, opt *gitlab.CreateMergeRequestOptions) (*gitlab.MergeRequest, *gitlab.Response, error)
 	UpdateMergeRequestFunc        func(pid interface{}, mriid int, opt *gitlab.UpdateMergeRequestOptions) (*gitlab.MergeRequest, *gitlab.Response, error)
