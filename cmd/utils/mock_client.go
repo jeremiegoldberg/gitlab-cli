@@ -28,7 +28,7 @@ func MockClient() *MockGitLabClient {
 // MockIssuesService implements mock GitLab Issues API methods.
 // Each method can be customized by setting the corresponding Func field.
 type MockIssuesService struct {
-	GetIssueFunc        func(pid interface{}, iid int, opt *gitlab.GetIssueOptions) (*gitlab.Issue, *gitlab.Response, error)
+	GetIssueFunc        func(pid interface{}, iid int, opts ...gitlab.RequestOptionFunc) (*gitlab.Issue, *gitlab.Response, error)
 	ListIssuesFunc      func(opt *gitlab.ListIssuesOptions) ([]*gitlab.Issue, *gitlab.Response, error)
 	CreateIssueFunc     func(pid interface{}, opt *gitlab.CreateIssueOptions) (*gitlab.Issue, *gitlab.Response, error)
 	UpdateIssueFunc     func(pid interface{}, iid int, opt *gitlab.UpdateIssueOptions) (*gitlab.Issue, *gitlab.Response, error)
@@ -38,7 +38,7 @@ type MockIssuesService struct {
 // MockMergeRequestsService implements mock GitLab MergeRequests API methods.
 // Each method can be customized by setting the corresponding Func field.
 type MockMergeRequestsService struct {
-	GetMergeRequestFunc           func(pid interface{}, mriid int, opt *gitlab.GetIssueOptions) (*gitlab.MergeRequest, *gitlab.Response, error)
+	GetMergeRequestFunc           func(pid interface{}, mriid int, opts ...gitlab.RequestOptionFunc) (*gitlab.MergeRequest, *gitlab.Response, error)
 	ListMergeRequestsFunc         func(opt *gitlab.ListMergeRequestsOptions) ([]*gitlab.MergeRequest, *gitlab.Response, error)
 	CreateMergeRequestFunc        func(pid interface{}, opt *gitlab.CreateMergeRequestOptions) (*gitlab.MergeRequest, *gitlab.Response, error)
 	UpdateMergeRequestFunc        func(pid interface{}, mriid int, opt *gitlab.UpdateMergeRequestOptions) (*gitlab.MergeRequest, *gitlab.Response, error)
@@ -61,7 +61,7 @@ type MockNotesService struct {
 	ListMergeRequestNotesFunc     func(pid interface{}, mriid int, opt *gitlab.ListMergeRequestNotesOptions) ([]*gitlab.Note, *gitlab.Response, error)
 }
 
-// Implement mock methods for IssuesService
+// GetIssue implements the mock method
 func (m *MockIssuesService) GetIssue(pid interface{}, iid int, opts ...gitlab.RequestOptionFunc) (*gitlab.Issue, *gitlab.Response, error) {
 	if m.GetIssueFunc != nil {
 		return m.GetIssueFunc(pid, iid, opts...)
@@ -76,7 +76,7 @@ func (m *MockIssuesService) ListIssues(opt *gitlab.ListIssuesOptions) ([]*gitlab
 	return nil, nil, nil
 }
 
-// Implement mock methods for MergeRequestsService
+// GetMergeRequest implements the mock method
 func (m *MockMergeRequestsService) GetMergeRequest(pid interface{}, mriid int, opts ...gitlab.RequestOptionFunc) (*gitlab.MergeRequest, *gitlab.Response, error) {
 	if m.GetMergeRequestFunc != nil {
 		return m.GetMergeRequestFunc(pid, mriid, opts...)
