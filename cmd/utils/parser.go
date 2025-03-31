@@ -2,6 +2,7 @@ package utils
 
 import (
 	"regexp"
+	"sort"
 	"strconv"
 )
 
@@ -18,7 +19,7 @@ var (
 	// - see #505
 	// - addresses #606
 	// Case insensitive to match variations like "Fixes" or "CLOSES"
-	issuePattern = regexp.MustCompile(`(?i)(fixes|closes|resolves|references|refs|re|see|addresses)?\s*#(\d+)`)
+	issuePattern = regexp.MustCompile(`(?i)(?:fixes|closes|resolves|references|refs|re|see|addresses)?\s*#(\d+)`)
 )
 
 // GetIssueIDsFromDescription extracts issue IIDs from a merge request description
@@ -37,7 +38,8 @@ func GetIssueIDsFromDescription(description string) []int {
 	// Use map to deduplicate IDs
 	issueMap := make(map[int]bool)
 	for _, match := range matches {
-		if id, err := strconv.Atoi(match[2]); err == nil {
+		// The issue number is in the first capture group
+		if id, err := strconv.Atoi(match[1]); err == nil {
 			issueMap[id] = true
 		}
 	}
@@ -48,6 +50,8 @@ func GetIssueIDsFromDescription(description string) []int {
 		issues = append(issues, id)
 	}
 
+	// Sort for consistent output
+	sort.Ints(issues)
 	return issues
 }
 

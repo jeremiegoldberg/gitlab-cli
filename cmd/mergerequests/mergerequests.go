@@ -60,13 +60,19 @@ var (
 		Short: "Get merge request description",
 		Run:   runGetDescription,
 	}
+
+	getIssuesCmd = &cobra.Command{
+		Use:   "get-issues",
+		Short: "Get issues linked to a merge request",
+		Run:   runGetIssues,
+	}
 )
 
 func init() {
 	client = utils.GetClient()
 
 	// Add subcommands
-	MergeRequestsCmd.AddCommand(listCmd, getCmd, createCmd, updateCmd, mergeCmd, closeCmd, getDescriptionCmd)
+	MergeRequestsCmd.AddCommand(listCmd, getCmd, createCmd, updateCmd, mergeCmd, closeCmd, getDescriptionCmd, getIssuesCmd)
 
 	// List flags
 	listCmd.Flags().IntP("project", "p", 0, "Project ID")
@@ -110,6 +116,11 @@ func init() {
 	// Get description flags
 	getDescriptionCmd.Flags().IntP("mr", "m", 0, "Merge Request IID")
 	getDescriptionCmd.MarkFlagRequired("mr")
+
+	// Get issues flags
+	getIssuesCmd.Flags().IntP("mr", "m", 0, "Merge Request IID")
+	getIssuesCmd.Flags().BoolP("json", "j", false, "Output as JSON")
+	getIssuesCmd.MarkFlagRequired("mr")
 }
 
 func runList(cmd *cobra.Command, args []string) {
@@ -277,4 +288,33 @@ func runGetDescription(cmd *cobra.Command, args []string) {
 	}
 
 	fmt.Println(description)
+}
+
+func runGetIssues(cmd *cobra.Command, args []string) {
+	projectID, _ := utils.GetProjectID(cmd)
+	mrIID, _ := cmd.Flags().GetInt("mr")
+
+	if jsonOutput, _ := cmd.Flags().GetBool("json"); jsonOutput {
+		output, err := GetLinkedIssuesAsJSON(projectID, mrIID)
+		if err != nil {
+			log.Fatalf("Failed to get linked issues: %v", err)
+		}
+		fmt.Println(output)
+		return
+	}
+
+	issues, err := GetLinkedIssues(projectID, mrIID)
+	if err != nil {
+		log.Fatalf("Failed to get linked issues: %v", err)
+	}
+
+	if len(issues) == 0 {
+		fmt.Println("No linked issues found")
+		return
+	}
+
+	fmt.Printf("Found %d linked issues:\n", len(issues))
+	for _, issue := range issues {
+		fmt.Printf("#%d: [%s] %s\n", issue.IID, issue.State, issue.Title)
+	}
 }

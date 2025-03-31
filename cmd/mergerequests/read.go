@@ -3,6 +3,7 @@ package mergerequests
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 
 	"gitlab-manager/cmd/types"
 	"gitlab-manager/cmd/issues"
@@ -100,7 +101,8 @@ func GetLinkedIssues(projectID, mrIID int) ([]types.Issue, error) {
 	for _, iid := range issueIIDs {
 		issue, err := issues.ReadIssue(projectID, iid)
 		if err != nil {
-			continue // Skip issues we can't fetch
+			log.Printf("Warning: Failed to get issue #%d: %v", iid, err)
+			continue
 		}
 		result = append(result, *issue)
 	}
