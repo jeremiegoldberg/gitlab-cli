@@ -40,170 +40,184 @@ export GITLAB_TOKEN=your_personal_access_token
 # In GitLab CI, CI_JOB_TOKEN is used automatically
 ```
 
-## Usage
+## Command Reference
 
-### Merge Request Management
+### Merge Requests
 
 ```bash
 # List merge requests
-mpg-gitlab mr list
-mpg-gitlab mr list --state opened --target main
+mpg-gitlab mr list [flags]
+  --state string     Filter by state (opened/closed/merged)
+  --target string    Filter by target branch
+  --author string    Filter by author username
+  --labels string    Filter by labels (comma-separated)
+  --json            Output in JSON format
 
 # Get merge request details
-mpg-gitlab mr get -m 123 [--json]
+mpg-gitlab mr get [flags]
+  -m, --mr int      Merge request IID (required)
+  -p, --project int Project ID
+  --json           Output in JSON format
 
 # Create merge request
+mpg-gitlab mr create [flags]
+  -s, --source string      Source branch (required)
+  -t, --target string      Target branch (required)
+  --title string          Title for the merge request (required)
+  --description string    Description text
+  --labels string         Labels to apply (comma-separated)
+  --milestone int         Milestone ID to assign
+  --assignee string       Assignee username
+
+# Block/Unblock merge request
+mpg-gitlab mr block [flags]
+  -m, --mr int           Merge request IID (required)
+  -r, --reason string    Blocking reason (required)
+
+mpg-gitlab mr unblock [flags]
+  -m, --mr int          Merge request IID (required)
+
+# Validate changelog
+mpg-gitlab mr check-changelog [flags]
+  -m, --mr int          Merge request IID (required)
+  --strict             Fail if no changelog entry found
+```
+
+### Issues
+
+```bash
+# List issues
+mpg-gitlab issues list [flags]
+  --state string      Filter by state (opened/closed)
+  --labels string     Filter by labels (comma-separated)
+  --milestone int     Filter by milestone ID
+  --json            Output in JSON format
+
+# Get issue details
+mpg-gitlab issues get [flags]
+  -i, --issue int    Issue IID (required)
+  -p, --project int  Project ID
+  --json           Output in JSON format
+
+# Create issue
+mpg-gitlab issues create [flags]
+  --title string         Issue title (required)
+  --description string   Issue description
+  --labels string        Labels to apply (comma-separated)
+  --milestone int        Milestone ID to assign
+  --assignee string      Assignee username
+```
+
+### Milestones
+
+```bash
+# List milestones
+mpg-gitlab milestones list [flags]
+  -p, --project int   Project ID
+  --state string     Filter by state (active/closed)
+  --json            Output in JSON format
+
+# Get milestone details
+mpg-gitlab milestones get [flags]
+  -p, --project int    Project ID
+  -m, --milestone int  Milestone ID (required)
+  --json             Output in JSON format
+
+# Create milestone
+mpg-gitlab milestones create [flags]
+  -p, --project int       Project ID
+  --title string         Milestone title (required)
+  --description string   Description text
+  --due-date string      Due date (YYYY-MM-DD)
+  --start-date string    Start date (YYYY-MM-DD)
+
+# Update milestone
+mpg-gitlab milestones update [flags]
+  -p, --project int       Project ID
+  -m, --milestone int     Milestone ID (required)
+  --title string         New title
+  --description string   New description
+  --due-date string      New due date
+  --state string         New state (activate/close)
+
+# Add changelog entries
+mpg-gitlab milestones add-changelog [flags]
+  -p, --project int      Project ID
+  -m, --milestone int    Milestone ID (required)
+```
+
+### Notes and Comments
+
+```bash
+# List notes
+mpg-gitlab notes list [flags]
+  -p, --project int   Project ID
+  -m, --mr int       Merge request IID
+  -i, --issue int    Issue IID
+  --json           Output in JSON format
+
+# Add note
+mpg-gitlab notes add [flags]
+  -p, --project int    Project ID
+  -m, --mr int        Merge request IID
+  -i, --issue int     Issue IID
+  --body string      Note content (required)
+```
+
+### Global Flags
+
+Available for all commands:
+
+```bash
+  -h, --help        Show help for command
+  --debug          Enable debug output
+  --quiet          Suppress all output except errors
+  --config string  Config file (default is $HOME/.mpg-gitlab.yaml)
+```
+
+### Environment Variables
+
+- `GITLAB_TOKEN`: Personal access token for GitLab API
+- `GITLAB_API_URL`: Custom GitLab API URL (for self-hosted instances)
+- `CI_PROJECT_ID`: Project ID (automatically set in GitLab CI)
+- `CI_MERGE_REQUEST_IID`: Merge request IID (automatically set in GitLab CI)
+
+## Examples
+
+### Typical Workflow
+
+```bash
+# Create a merge request
 mpg-gitlab mr create \
   --source feature-branch \
   --target main \
   --title "Add new feature" \
-  --description "Implements..."
+  --description "[Feature] Implement new authentication system"
 
-# Get linked issues
-mpg-gitlab mr get-issues -m 123 [--json]
-
-# Get MR description
-mpg-gitlab mr get-description -m 123
-```
-
-### Milestone Management
-
-```bash
-# List milestones
-mpg-gitlab milestones list -p PROJECT_ID
-mpg-gitlab milestones list --state active
-
-# Get milestone details
-mpg-gitlab milestones get -p PROJECT_ID -m MILESTONE_ID [--json]
-
-# Create milestone
-mpg-gitlab milestones create \
-  -p PROJECT_ID \
-  --title "Release 1.0" \
-  --description "First major release" \
-  --due-date "2024-03-01"
-
-# Update milestone
-mpg-gitlab milestones update \
-  -p PROJECT_ID \
-  -m MILESTONE_ID \
-  --title "Release 1.1" \
-  --state "closed"
-
-# Delete milestone
-mpg-gitlab milestones delete -p PROJECT_ID -m MILESTONE_ID
-
-# Add changelog entries to milestone
-mpg-gitlab milestones add-changelog -p PROJECT_ID -m MILESTONE_ID
-```
-
-Milestone features include:
-- Create, read, update, and delete milestones
-- List milestones with filtering options
-- Set due dates and start dates
-- Track milestone progress
-- Automatic changelog collection from merge requests
-- JSON output support for automation
-
-Example JSON output:
-```json
-{
-  "id": 1,
-  "title": "Release 1.0",
-  "description": "First major release",
-  "state": "active",
-  "due_date": "2024-03-01",
-  "start_date": "2024-01-15",
-  "created_at": "2024-01-15T10:30:00Z",
-  "updated_at": "2024-01-15T10:30:00Z",
-  "web_url": "https://gitlab.com/..."
-}
-```
-
-### Changelog Validation
-
-The tool enforces changelog entries in either the MR description or linked issues.
-Valid changelog entries must start with one of:
-
-- [Feature] - New features
-- [Improvement] - Improvements to existing features
-- [Fix] - Bug fixes
-- [Infra] - Infrastructure changes
-- [No-Changelog-Entry] - Skip changelog requirement
-
-```bash
-# Check changelog entries
+# Check changelog
 mpg-gitlab mr check-changelog -m 123
 
-# Example valid entries:
-[Feature] Add new user authentication system
-[Fix] Resolve login page redirect issue
-[Improvement] Enhance search performance
-[Infra] Upgrade PostgreSQL to 14
-[No-Changelog-Entry] Internal refactoring
-```
-
-### Merge Request Blocking
-
-Control merge request status with blocking:
-
-```bash
-# Block a merge request
+# Block MR if needed
 mpg-gitlab mr block -m 123 -r "Needs security review"
 
 # Unblock when ready
 mpg-gitlab mr unblock -m 123
+
+# Add to milestone changelog
+mpg-gitlab milestones add-changelog -m 45
 ```
 
-When blocked:
-- MR title is prefixed with [BLOCKED]
-- A note is added with the blocking reason
-- Merge operations are prevented
-
 ### CI/CD Integration
-
-Example GitLab CI configuration:
 
 ```yaml
 validate_merge_request:
   script:
-    # Validate changelog
     - |
       if ! mpg-gitlab mr check-changelog -m $CI_MERGE_REQUEST_IID; then
         echo "Missing changelog entry"
         mpg-gitlab mr block -m $CI_MERGE_REQUEST_IID -r "Missing changelog entry"
         exit 1
       fi
-
-    # Other validations
-    - mpg-gitlab mr get-issues -m $CI_MERGE_REQUEST_IID
-    
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-```
-
-### JSON Output
-
-Many commands support JSON output for integration with other tools:
-
-```bash
-# Get MR details in JSON
-mpg-gitlab mr get -m 123 --json
-
-# Example output:
-{
-  "iid": 123,
-  "title": "Add new feature",
-  "description": "[Feature] Implement...",
-  "state": "opened",
-  "source_branch": "feature-branch",
-  "target_branch": "main",
-  "created_at": "2024-01-15T10:30:00Z",
-  "web_url": "https://gitlab.com/..."
-}
-
-# Get linked issues in JSON
-mpg-gitlab mr get-issues -m 123 --json
 ```
 
 ## Development
