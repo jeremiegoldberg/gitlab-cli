@@ -26,10 +26,25 @@ func cleanDescription(text string) string {
 	urlPattern := regexp.MustCompile(`https?://\S+`)
 	text = urlPattern.ReplaceAllString(text, "")
 
-	// Remove extra whitespace
+	// Replace escaped newlines with actual newlines
+	text = strings.ReplaceAll(text, "\\n", "\n")
+
+	// Remove other backslashes
+	text = strings.ReplaceAll(text, "\\", "")
+
+	// Remove extra whitespace while preserving newlines
+	lines := strings.Split(text, "\n")
+	for i, line := range lines {
+		lines[i] = strings.TrimSpace(line)
+	}
+	text = strings.Join(lines, "\n")
+
+	// Remove multiple consecutive newlines
+	multipleNewlines := regexp.MustCompile(`\n\s*\n+`)
+	text = multipleNewlines.ReplaceAllString(text, "\n")
+
+	// Final trim
 	text = strings.TrimSpace(text)
-	whitespace := regexp.MustCompile(`\s+`)
-	text = whitespace.ReplaceAllString(text, " ")
 
 	return text
 }
