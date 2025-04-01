@@ -166,6 +166,10 @@ func init() {
 	// Check milestone flags
 	checkMilestoneCmd.Flags().IntP("mr", "m", 0, "Merge request IID")
 	checkMilestoneCmd.MarkFlagRequired("mr")
+	checkMilestoneCmd.Flags().IntP("project", "p", 0, "Project ID")
+
+	// Add command to parent
+	MergeRequestsCmd.AddCommand(checkMilestoneCmd)
 }
 
 func runList(cmd *cobra.Command, args []string) {
