@@ -87,13 +87,19 @@ var (
 		Short: "Unblock a merge request to allow merging",
 		Run:   runUnblock,
 	}
+
+	checkMilestoneCmd = &cobra.Command{
+		Use:   "check-milestone",
+		Short: "Check if MR and linked issues have milestone assigned",
+		Run:   runCheckMilestone,
+	}
 )
 
 func init() {
 	client = utils.GetClient()
 
 	// Add subcommands
-	MergeRequestsCmd.AddCommand(listCmd, getCmd, createCmd, updateCmd, mergeCmd, closeCmd, getDescriptionCmd, getIssuesCmd, checkChangelogCmd, blockCmd, unblockCmd)
+	MergeRequestsCmd.AddCommand(listCmd, getCmd, createCmd, updateCmd, mergeCmd, closeCmd, getDescriptionCmd, getIssuesCmd, checkChangelogCmd, blockCmd, unblockCmd, checkMilestoneCmd)
 
 	// List flags
 	listCmd.Flags().IntP("project", "p", 0, "Project ID")
@@ -156,6 +162,10 @@ func init() {
 	// Unblock flags
 	unblockCmd.Flags().IntP("mr", "m", 0, "Merge Request IID")
 	unblockCmd.MarkFlagRequired("mr")
+
+	// Check milestone flags
+	checkMilestoneCmd.Flags().IntP("mr", "m", 0, "Merge request IID")
+	checkMilestoneCmd.MarkFlagRequired("mr")
 }
 
 func runList(cmd *cobra.Command, args []string) {
@@ -448,4 +458,14 @@ func runUnblock(cmd *cobra.Command, args []string) {
 	}
 
 	fmt.Printf("Unblocked merge request #%d\n", mrIID)
+}
+
+func runCheckMilestone(cmd *cobra.Command, args []string) {
+	projectID, _ := utils.GetProjectID(cmd)
+	mrIID, _ := cmd.Flags().GetInt("mr")
+
+	if err := CheckMilestone(projectID, mrIID); err != nil {
+		log.Fatalf("Milestone check failed: %v", err)
+	}
+	fmt.Println("Milestone check passed")
 }
