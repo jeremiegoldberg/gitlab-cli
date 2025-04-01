@@ -12,6 +12,28 @@ const (
 	ChangelogError = "No valid changelog entry found"
 )
 
+// cleanDescription removes common formatting and noise from text
+func cleanDescription(text string) string {
+	// Remove code blocks
+	codeBlock := regexp.MustCompile("```[^`]*```")
+	text = codeBlock.ReplaceAllString(text, "")
+
+	// Remove inline code
+	inlineCode := regexp.MustCompile("`[^`]*`")
+	text = inlineCode.ReplaceAllString(text, "")
+
+	// Remove URLs
+	urlPattern := regexp.MustCompile(`https?://\S+`)
+	text = urlPattern.ReplaceAllString(text, "")
+
+	// Remove extra whitespace
+	text = strings.TrimSpace(text)
+	whitespace := regexp.MustCompile(`\s+`)
+	text = whitespace.ReplaceAllString(text, " ")
+
+	return text
+}
+
 // GetChangelogEntries returns changelog entries from MR and linked issues
 func GetChangelogEntries(projectID, mrIID int) (string, error) {
 	// Get the MR
@@ -21,7 +43,7 @@ func GetChangelogEntries(projectID, mrIID int) (string, error) {
 	}
 
 	// Check MR description first
-	entry := findChangelogEntry(mr.Description)
+	entry := findChangelogEntry(cleanDescription(mr.Description))
 	if entry != "" {
 		if !strings.Contains(strings.ToLower(entry), "[no-changelog-entry]") {
 			return fmt.Sprintf("MR #%d: %s", mr.IID, entry), nil
@@ -35,7 +57,7 @@ func GetChangelogEntries(projectID, mrIID int) (string, error) {
 		if err != nil {
 			continue // Skip issues we can't access
 		}
-		entry := findChangelogEntry(issue.Description)
+		entry := findChangelogEntry(cleanDescription(issue.Description))
 		if entry != "" && !strings.Contains(strings.ToLower(entry), "[no-changelog-entry]") {
 			return fmt.Sprintf("#%d: %s", issue.IID, entry), nil
 		}
