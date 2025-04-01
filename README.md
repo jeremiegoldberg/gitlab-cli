@@ -142,8 +142,11 @@ mpg-gitlab milestones update [flags]
 
 # Add changelog entries
 mpg-gitlab milestones add-changelog [flags]
-  -p, --project int      Project ID
-  -m, --milestone int    Milestone ID (required)
+  -p, --project int          Project ID
+  -m, --milestone int       Milestone ID
+  -r, --merge-request int   Merge request IID
+
+Note: Either --milestone or --merge-request must be provided
 ```
 
 ### Notes and Comments

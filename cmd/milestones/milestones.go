@@ -93,8 +93,11 @@ func init() {
 	deleteCmd.MarkFlagRequired("milestone")
 
 	// Add changelog flags
-	addChangelogCmd.Flags().IntP("project", "p", 0, "Project ID")
+	addChangelogCmd.Flags().IntP("merge-request", "r", 0, "Merge request IID")
 	addChangelogCmd.Flags().IntP("milestone", "m", 0, "Milestone ID")
+	addChangelogCmd.Flags().IntP("project", "p", 0, "Project ID")
+	// Make one of them required
+	addChangelogCmd.MarkFlagsMutuallyExclusive("merge-request", "milestone")
 }
 
 func stringToISOTime(date string) *gitlab.ISOTime {
@@ -225,10 +228,18 @@ func runDelete(cmd *cobra.Command, args []string) {
 
 func runAddChangelog(cmd *cobra.Command, args []string) {
 	projectID, _ := utils.GetProjectID(cmd)
-	milestoneID, _ := cmd.Flags().GetInt("milestone")
 
-	if err := AddChangelogToMilestone(projectID, milestoneID); err != nil {
-		log.Fatalf("Failed to add changelog: %v", err)
+	// Check which flag was provided
+	if mrIID, _ := cmd.Flags().GetInt("merge-request"); mrIID != 0 {
+		if err := AddChangelogFromMR(projectID, mrIID); err != nil {
+			log.Fatalf("Failed to add changelog: %v", err)
+		}
+	} else if milestoneID, _ := cmd.Flags().GetInt("milestone"); milestoneID != 0 {
+		if err := AddChangelogFromMilestone(projectID, milestoneID); err != nil {
+			log.Fatalf("Failed to add changelog: %v", err)
+		}
+	} else {
+		log.Fatal("Either --merge-request or --milestone flag is required")
 	}
 
 	fmt.Println("Successfully updated milestone changelog")
