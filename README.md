@@ -218,6 +218,13 @@ validate_merge_request:
         mpg-gitlab mr block -m $CI_MERGE_REQUEST_IID -r "Missing changelog entry"
         exit 1
       fi
+     # Check milestone
+     - |
+       if ! mpg-gitlab mr check-milestone -m $CI_MERGE_REQUEST_IID; then
+         echo "Missing milestone"
+         mpg-gitlab mr block -m $CI_MERGE_REQUEST_IID -r "Missing milestone assignment"
+         exit 1
+       fi
 ```
 
 ## Development
