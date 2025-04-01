@@ -48,13 +48,19 @@ var (
 		Short: "Delete a milestone",
 		Run:   runDelete,
 	}
+
+	addChangelogCmd = &cobra.Command{
+		Use:   "add-changelog",
+		Short: "Add changelog entries from merge requests to milestone release notes",
+		Run:   runAddChangelog,
+	}
 )
 
 func init() {
 	client = utils.GetClient()
 
 	// Add subcommands
-	MilestonesCmd.AddCommand(listCmd, getCmd, createCmd, updateCmd, deleteCmd)
+	MilestonesCmd.AddCommand(listCmd, getCmd, createCmd, updateCmd, deleteCmd, addChangelogCmd)
 
 	// List flags
 	listCmd.Flags().IntP("project", "p", 0, "Project ID")
@@ -85,6 +91,10 @@ func init() {
 	deleteCmd.Flags().IntP("project", "p", 0, "Project ID")
 	deleteCmd.Flags().IntP("milestone", "m", 0, "Milestone ID")
 	deleteCmd.MarkFlagRequired("milestone")
+
+	// Add changelog flags
+	addChangelogCmd.Flags().IntP("project", "p", 0, "Project ID")
+	addChangelogCmd.Flags().IntP("milestone", "m", 0, "Milestone ID")
 }
 
 func stringToISOTime(date string) *gitlab.ISOTime {
@@ -211,4 +221,15 @@ func runDelete(cmd *cobra.Command, args []string) {
 	}
 
 	fmt.Printf("Deleted milestone #%d\n", milestoneID)
+}
+
+func runAddChangelog(cmd *cobra.Command, args []string) {
+	projectID, _ := utils.GetProjectID(cmd)
+	milestoneID, _ := cmd.Flags().GetInt("milestone")
+
+	if err := AddChangelogToMilestone(projectID, milestoneID); err != nil {
+		log.Fatalf("Failed to add changelog: %v", err)
+	}
+
+	fmt.Println("Successfully updated milestone changelog")
 }

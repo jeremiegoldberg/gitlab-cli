@@ -6,7 +6,11 @@ import (
 )
 
 // MockGitLabClient implements a mock GitLab client for testing.
-// It provides mock implementations of the GitLab API services.
+// It provides mock implementations of the GitLab API services:
+// - Issues service for managing GitLab issues
+// - MergeRequests service for managing merge requests
+// - Milestones service for managing milestones
+// - Notes service for managing comments and notes
 type MockGitLabClient struct {
 	Issues        *MockIssuesService
 	MergeRequests *MockMergeRequestsService
@@ -16,6 +20,7 @@ type MockGitLabClient struct {
 
 // MockClient creates a new mock GitLab client for testing.
 // Returns a MockGitLabClient with initialized mock services.
+// Each service can be customized by setting its Func fields.
 func MockClient() *MockGitLabClient {
 	return &MockGitLabClient{
 		Issues:        &MockIssuesService{},
@@ -27,6 +32,12 @@ func MockClient() *MockGitLabClient {
 
 // MockIssuesService implements mock GitLab Issues API methods.
 // Each method can be customized by setting the corresponding Func field.
+// Available methods:
+// - GetIssue: Get a single issue
+// - ListIssues: List all issues
+// - CreateIssue: Create a new issue
+// - UpdateIssue: Update an existing issue
+// - DeleteIssue: Delete an issue
 type MockIssuesService struct {
 	GetIssueFunc        func(pid interface{}, iid int, opts ...gitlab.RequestOptionFunc) (*gitlab.Issue, *gitlab.Response, error)
 	ListIssuesFunc      func(opt *gitlab.ListIssuesOptions) ([]*gitlab.Issue, *gitlab.Response, error)
@@ -37,16 +48,30 @@ type MockIssuesService struct {
 
 // MockMergeRequestsService implements mock GitLab MergeRequests API methods.
 // Each method can be customized by setting the corresponding Func field.
+// Available methods:
+// - GetMergeRequest: Get a single merge request
+// - ListMergeRequests: List all merge requests
+// - ListProjectMergeRequests: List merge requests in a project
+// - CreateMergeRequest: Create a new merge request
+// - UpdateMergeRequest: Update an existing merge request
+// - AcceptMergeRequest: Accept/merge a merge request
 type MockMergeRequestsService struct {
 	GetMergeRequestFunc           func(pid interface{}, mriid int, opts ...gitlab.RequestOptionFunc) (*gitlab.MergeRequest, *gitlab.Response, error)
 	ListMergeRequestsFunc         func(opt *gitlab.ListMergeRequestsOptions) ([]*gitlab.MergeRequest, *gitlab.Response, error)
+	ListProjectMergeRequestsFunc  func(pid interface{}, opt *gitlab.ListProjectMergeRequestsOptions) ([]*gitlab.MergeRequest, *gitlab.Response, error)
 	CreateMergeRequestFunc        func(pid interface{}, opt *gitlab.CreateMergeRequestOptions) (*gitlab.MergeRequest, *gitlab.Response, error)
 	UpdateMergeRequestFunc        func(pid interface{}, mriid int, opt *gitlab.UpdateMergeRequestOptions) (*gitlab.MergeRequest, *gitlab.Response, error)
 	AcceptMergeRequestFunc        func(pid interface{}, mriid int, opt *gitlab.AcceptMergeRequestOptions) (*gitlab.MergeRequest, *gitlab.Response, error)
-	ListProjectMergeRequestsFunc  func(pid interface{}, opt *gitlab.ListProjectMergeRequestsOptions) ([]*gitlab.MergeRequest, *gitlab.Response, error)
 }
 
-// MockMilestonesService implements mock GitLab Milestones API methods
+// MockMilestonesService implements mock GitLab Milestones API methods.
+// Each method can be customized by setting the corresponding Func field.
+// Available methods:
+// - GetMilestone: Get a single milestone
+// - ListMilestones: List all milestones
+// - CreateMilestone: Create a new milestone
+// - UpdateMilestone: Update an existing milestone
+// - DeleteMilestone: Delete a milestone
 type MockMilestonesService struct {
 	GetMilestoneFunc        func(pid interface{}, milestone int, opts ...gitlab.RequestOptionFunc) (*gitlab.Milestone, *gitlab.Response, error)
 	ListMilestonesFunc      func(pid interface{}, opt *gitlab.ListMilestonesOptions) ([]*gitlab.Milestone, *gitlab.Response, error)
@@ -55,7 +80,11 @@ type MockMilestonesService struct {
 	DeleteMilestoneFunc     func(pid interface{}, milestone int) (*gitlab.Response, error)
 }
 
-// MockNotesService implements mock GitLab Notes API methods
+// MockNotesService implements mock GitLab Notes API methods.
+// Each method can be customized by setting the corresponding Func field.
+// Available methods:
+// - CreateMergeRequestNote: Create a note on a merge request
+// - ListMergeRequestNotes: List all notes on a merge request
 type MockNotesService struct {
 	CreateMergeRequestNoteFunc    func(pid interface{}, mriid int, opt *gitlab.CreateMergeRequestNoteOptions) (*gitlab.Note, *gitlab.Response, error)
 	ListMergeRequestNotesFunc     func(pid interface{}, mriid int, opt *gitlab.ListMergeRequestNotesOptions) ([]*gitlab.Note, *gitlab.Response, error)

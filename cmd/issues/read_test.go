@@ -13,7 +13,7 @@ import (
 
 func TestGetIssueDescription(t *testing.T) {
 	mockClient := utils.MockClient()
-	client = mockClient // Set the mock client
+	client = mockClient.Issues // Use the mock service directly
 
 	now := time.Now()
 	tests := []struct {

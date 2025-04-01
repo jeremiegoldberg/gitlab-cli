@@ -10,7 +10,7 @@ import (
 
 func TestIsBlocked(t *testing.T) {
 	mockClient := utils.MockClient()
-	client = mockClient
+	client = mockClient.MergeRequests
 
 	tests := []struct {
 		name        string
@@ -27,7 +27,7 @@ func TestIsBlocked(t *testing.T) {
 			mrIID:    1,
 			setupMocks: func() {
 				mr := utils.CreateMockMR(1, "[BLOCKED] Test MR", "Description")
-				mockClient.MergeRequests.GetMergeRequestFunc = func(pid interface{}, mriid int, opts ...gitlab.RequestOptionFunc) (*gitlab.MergeRequest, *gitlab.Response, error) {
+				mockClient.GetMergeRequestFunc = func(pid interface{}, mriid int, opts ...gitlab.RequestOptionFunc) (*gitlab.MergeRequest, *gitlab.Response, error) {
 					return mr, nil, nil
 				}
 			},
@@ -40,7 +40,7 @@ func TestIsBlocked(t *testing.T) {
 			mrIID:    1,
 			setupMocks: func() {
 				mr := utils.CreateMockMR(1, "Test MR", "Description")
-				mockClient.MergeRequests.GetMergeRequestFunc = func(pid interface{}, mriid int, opts ...gitlab.RequestOptionFunc) (*gitlab.MergeRequest, *gitlab.Response, error) {
+				mockClient.GetMergeRequestFunc = func(pid interface{}, mriid int, opts ...gitlab.RequestOptionFunc) (*gitlab.MergeRequest, *gitlab.Response, error) {
 					return mr, nil, nil
 				}
 			},

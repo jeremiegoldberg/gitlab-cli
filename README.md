@@ -66,6 +66,60 @@ mpg-gitlab mr get-issues -m 123 [--json]
 mpg-gitlab mr get-description -m 123
 ```
 
+### Milestone Management
+
+```bash
+# List milestones
+mpg-gitlab milestones list -p PROJECT_ID
+mpg-gitlab milestones list --state active
+
+# Get milestone details
+mpg-gitlab milestones get -p PROJECT_ID -m MILESTONE_ID [--json]
+
+# Create milestone
+mpg-gitlab milestones create \
+  -p PROJECT_ID \
+  --title "Release 1.0" \
+  --description "First major release" \
+  --due-date "2024-03-01"
+
+# Update milestone
+mpg-gitlab milestones update \
+  -p PROJECT_ID \
+  -m MILESTONE_ID \
+  --title "Release 1.1" \
+  --state "closed"
+
+# Delete milestone
+mpg-gitlab milestones delete -p PROJECT_ID -m MILESTONE_ID
+
+# Add changelog entries to milestone
+mpg-gitlab milestones add-changelog -p PROJECT_ID -m MILESTONE_ID
+```
+
+Milestone features include:
+- Create, read, update, and delete milestones
+- List milestones with filtering options
+- Set due dates and start dates
+- Track milestone progress
+- Automatic changelog collection from merge requests
+- JSON output support for automation
+
+Example JSON output:
+```json
+{
+  "id": 1,
+  "title": "Release 1.0",
+  "description": "First major release",
+  "state": "active",
+  "due_date": "2024-03-01",
+  "start_date": "2024-01-15",
+  "created_at": "2024-01-15T10:30:00Z",
+  "updated_at": "2024-01-15T10:30:00Z",
+  "web_url": "https://gitlab.com/..."
+}
+```
+
 ### Changelog Validation
 
 The tool enforces changelog entries in either the MR description or linked issues.

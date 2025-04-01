@@ -10,7 +10,7 @@ import (
 
 func TestGetChangelogEntries(t *testing.T) {
 	mockClient := utils.MockClient()
-	client = mockClient
+	client = mockClient.MergeRequests // Use the mock service directly
 
 	tests := []struct {
 		name        string

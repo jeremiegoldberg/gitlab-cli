@@ -2,63 +2,55 @@ package mergerequests
 
 import (
 	"fmt"
+	"mpg-gitlab/cmd/utils"
 	"regexp"
 	"strings"
 )
 
-// GetChangelogEntries checks for changelog entries in MR and linked issues
+const (
+	// ChangelogError is returned when no valid changelog entry is found
+	ChangelogError = "No valid changelog entry found"
+)
+
+// GetChangelogEntries returns changelog entries from MR and linked issues
 func GetChangelogEntries(projectID, mrIID int) (string, error) {
-	// First check linked issues
-	issues, err := GetLinkedIssues(projectID, mrIID)
-	if err != nil {
-		return "", fmt.Errorf("failed to get linked issues: %v", err)
-	}
-
-	// If we have linked issues, check their descriptions
-	if len(issues) > 0 {
-		for _, issue := range issues {
-			entry := findChangelogEntry(issue.Description)
-			if entry != "" {
-				return fmt.Sprintf("#%d: %s", issue.IID, entry), nil
-			}
-		}
-		// If no changelog found in any linked issue
-		return changelogError, nil
-	}
-
-	// If no linked issues, check MR description
-	mr, err := ReadMergeRequest(projectID, mrIID)
+	// Get the MR
+	mr, _, err := client.MergeRequests.GetMergeRequest(projectID, mrIID, nil)
 	if err != nil {
 		return "", fmt.Errorf("failed to get merge request: %v", err)
 	}
 
+	// Check MR description first
 	entry := findChangelogEntry(mr.Description)
 	if entry != "" {
-		return fmt.Sprintf("MR #%d: %s", mr.IID, entry), nil
-	}
-
-	return changelogError, nil
-}
-
-// findChangelogEntry searches for changelog entries in text
-func findChangelogEntry(text string) string {
-	// Define changelog patterns
-	patterns := []string{
-		`\[Feature\].*`,
-		`\[Improvement\].*`,
-		`\[Fix\].*`,
-		`\[Infra\].*`,
-		`\[No-Changelog-Entry\].*`,
-	}
-
-	// Check each line for changelog entries
-	lines := strings.Split(text, "\n")
-	for _, line := range lines {
-		for _, pattern := range patterns {
-			if matched, err := regexp.MatchString(pattern, line); err == nil && matched {
-				return strings.TrimSpace(line)
-			}
+		if !strings.Contains(strings.ToLower(entry), "[no-changelog-entry]") {
+			return fmt.Sprintf("MR #%d: %s", mr.IID, entry), nil
 		}
 	}
-	return ""
-} 
+
+	// Check linked issues
+	issueIDs := utils.GetIssueIDsFromDescription(mr.Description)
+	for _, issueID := range issueIDs {
+		issue, _, err := client.Issues.GetIssue(projectID, issueID, nil)
+		if err != nil {
+			continue // Skip issues we can't access
+		}
+		entry := findChangelogEntry(issue.Description)
+		if entry != "" && !strings.Contains(strings.ToLower(entry), "[no-changelog-entry]") {
+			return fmt.Sprintf("#%d: %s", issue.IID, entry), nil
+		}
+	}
+
+	return ChangelogError, nil
+}
+
+// findChangelogEntry extracts changelog entry from text
+func findChangelogEntry(text string) string {
+	// Case insensitive regex for changelog entries
+	re := regexp.MustCompile(`(?i)\[(feature|improvement|fix|infra|no-changelog-entry)\].*`)
+	match := re.FindString(text)
+	if match == "" {
+		return ""
+	}
+	return strings.TrimSpace(match)
+}
