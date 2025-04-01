@@ -140,13 +140,12 @@ mpg-gitlab milestones update [flags]
   --due-date string      New due date
   --state string         New state (activate/close)
 
-# Add changelog entries
-mpg-gitlab milestones add-changelog [flags]
-  -p, --project int          Project ID
-  -m, --milestone int       Milestone ID
-  -r, --merge-request int   Merge request IID
+# Add changelog to milestone
+mpg-gitlab mr add-changelog [flags]
+  -p, --project int    Project ID
+  -m, --mr int        Merge request IID (required)
 
-Note: Either --milestone or --merge-request must be provided
+Note: Requires the merge request to have a milestone assigned
 ```
 
 ### Notes and Comments

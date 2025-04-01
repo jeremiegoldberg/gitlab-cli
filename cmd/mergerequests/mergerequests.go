@@ -93,13 +93,19 @@ var (
 		Short: "Check if MR and linked issues have milestone assigned",
 		Run:   runCheckMilestone,
 	}
+
+	addChangelogCmd = &cobra.Command{
+		Use:   "add-changelog",
+		Short: "Add changelog entry from merge request to its milestone",
+		Run:   runAddChangelog,
+	}
 )
 
 func init() {
 	client = utils.GetClient()
 
 	// Add subcommands
-	MergeRequestsCmd.AddCommand(listCmd, getCmd, createCmd, updateCmd, mergeCmd, closeCmd, getDescriptionCmd, getIssuesCmd, checkChangelogCmd, blockCmd, unblockCmd, checkMilestoneCmd)
+	MergeRequestsCmd.AddCommand(listCmd, getCmd, createCmd, updateCmd, mergeCmd, closeCmd, getDescriptionCmd, getIssuesCmd, checkChangelogCmd, blockCmd, unblockCmd, checkMilestoneCmd, addChangelogCmd)
 
 	// List flags
 	listCmd.Flags().IntP("project", "p", 0, "Project ID")
@@ -168,8 +174,13 @@ func init() {
 	checkMilestoneCmd.MarkFlagRequired("mr")
 	checkMilestoneCmd.Flags().IntP("project", "p", 0, "Project ID")
 
+	// Add changelog flags
+	addChangelogCmd.Flags().IntP("mr", "m", 0, "Merge request IID")
+	addChangelogCmd.Flags().IntP("project", "p", 0, "Project ID")
+	addChangelogCmd.MarkFlagRequired("mr")
+
 	// Add command to parent
-	MergeRequestsCmd.AddCommand(checkMilestoneCmd)
+	MergeRequestsCmd.AddCommand(checkMilestoneCmd, addChangelogCmd)
 }
 
 func runList(cmd *cobra.Command, args []string) {
@@ -472,4 +483,15 @@ func runCheckMilestone(cmd *cobra.Command, args []string) {
 		log.Fatalf("Milestone check failed: %v", err)
 	}
 	fmt.Println("Milestone check passed")
+}
+
+func runAddChangelog(cmd *cobra.Command, args []string) {
+	projectID, _ := utils.GetProjectID(cmd)
+	mrIID, _ := cmd.Flags().GetInt("mr")
+
+	if err := AddChangelogToMilestone(projectID, mrIID); err != nil {
+		log.Fatalf("Failed to add changelog: %v", err)
+	}
+
+	fmt.Println("Successfully updated milestone changelog")
 }
