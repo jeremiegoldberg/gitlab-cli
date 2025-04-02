@@ -87,6 +87,20 @@ mpg-gitlab mr unblock [flags]
 mpg-gitlab mr check-changelog [flags]
   -m, --mr int          Merge request IID (required)
   --strict             Fail if no changelog entry found
+
+# Add changelog to milestone
+mpg-gitlab mr add-changelog [flags]
+  -p, --project int    Project ID
+  -m, --mr int        Merge request IID (required)
+
+Note: Requires the merge request to have a milestone assigned
+
+# Add Current milestone
+mpg-gitlab mr add-current-milestone [flags]
+  -p, --project int    Project ID
+  -m, --mr int        Merge request IID (required)
+
+Note: Updates both the MR and its linked issues
 ```
 
 ### Issues

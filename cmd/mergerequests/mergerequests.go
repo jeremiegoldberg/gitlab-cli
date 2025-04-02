@@ -105,13 +105,19 @@ var (
 		Short: "Get merge request IID from commit",
 		Run:   runGetMRFromCommit,
 	}
+
+	addCurrentMilestoneCmd = &cobra.Command{
+		Use:   "add-current-milestone",
+		Short: "Add 'Current' milestone to MR and linked issues",
+		Run:   runAddCurrentMilestone,
+	}
 )
 
 func init() {
 	client = utils.GetClient()
 
 	// Add subcommands
-	MergeRequestsCmd.AddCommand(listCmd, getCmd, createCmd, updateCmd, mergeCmd, closeCmd, getDescriptionCmd, getIssuesCmd, checkChangelogCmd, blockCmd, unblockCmd, checkMilestoneCmd, addChangelogCmd, getMRFromCommitCmd)
+	MergeRequestsCmd.AddCommand(listCmd, getCmd, createCmd, updateCmd, mergeCmd, closeCmd, getDescriptionCmd, getIssuesCmd, checkChangelogCmd, blockCmd, unblockCmd, checkMilestoneCmd, addChangelogCmd, getMRFromCommitCmd, addCurrentMilestoneCmd)
 
 	// List flags
 	listCmd.Flags().IntP("project", "p", 0, "Project ID")
@@ -191,8 +197,13 @@ func init() {
 	getMRFromCommitCmd.Flags().IntP("project", "p", 0, "Project ID")
 	getMRFromCommitCmd.MarkFlagsMutuallyExclusive("commit", "message")
 
+	// Add current milestone flags
+	addCurrentMilestoneCmd.Flags().IntP("mr", "m", 0, "Merge request IID")
+	addCurrentMilestoneCmd.Flags().IntP("project", "p", 0, "Project ID")
+	addCurrentMilestoneCmd.MarkFlagRequired("mr")
+
 	// Add command to parent
-	MergeRequestsCmd.AddCommand(checkMilestoneCmd, addChangelogCmd, getMRFromCommitCmd)
+	MergeRequestsCmd.AddCommand(checkMilestoneCmd, addChangelogCmd, getMRFromCommitCmd, addCurrentMilestoneCmd)
 }
 
 func runList(cmd *cobra.Command, args []string) {
@@ -526,4 +537,15 @@ func runGetMRFromCommit(cmd *cobra.Command, args []string) {
 	}
 
 	fmt.Printf("%d\n", mrIID)
+}
+
+func runAddCurrentMilestone(cmd *cobra.Command, args []string) {
+	projectID, _ := utils.GetProjectID(cmd)
+	mrIID, _ := cmd.Flags().GetInt("mr")
+
+	if err := AddCurrentMilestone(projectID, mrIID); err != nil {
+		log.Fatalf("Failed to add current milestone: %v", err)
+	}
+
+	fmt.Printf("Successfully added Current milestone to MR #%d and its linked issues\n", mrIID)
 }
