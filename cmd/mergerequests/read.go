@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"regexp"
+	"strconv"
 
 	"mpg-gitlab/cmd/types"
 	"mpg-gitlab/cmd/issues"
@@ -138,4 +140,32 @@ func GetMRDescription(projectID, mrIID int) (string, error) {
 	}
 
 	return mr.GetDescription(), nil
+}
+
+// GetMRFromCommitMessage extracts merge request IID from a commit message
+func GetMRFromCommitMessage(message string) (int, error) {
+	re := regexp.MustCompile(`See merge request !(\d+)`)
+	matches := re.FindStringSubmatch(message)
+	if len(matches) < 2 {
+		return 0, fmt.Errorf("no merge request reference found in commit message")
+	}
+	
+	mrIID, err := strconv.Atoi(matches[1])
+	if err != nil {
+		return 0, fmt.Errorf("invalid merge request IID: %v", err)
+	}
+	
+	return mrIID, nil
+}
+
+// GetMRFromCommit gets merge request IID from a commit ID
+func GetMRFromCommit(projectID int, commitID string) (int, error) {
+	// Get the commit details
+	commit, _, err := client.Commits.GetCommit(projectID, commitID)
+	if err != nil {
+		return 0, fmt.Errorf("failed to get commit: %v", err)
+	}
+
+	// Extract MR IID from commit message
+	return GetMRFromCommitMessage(commit.Message)
 }

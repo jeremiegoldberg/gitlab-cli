@@ -59,6 +59,12 @@ mpg-gitlab mr get [flags]
   -p, --project int Project ID
   --json           Output in JSON format
 
+# Get merge request IID from commit message
+mpg-gitlab mr get-mr-from-commit [flags]
+  -c, --commit string    Commit ID (SHA)
+  -m, --message string   Commit message (optional)
+  -p, --project int     Project ID
+
 # Create merge request
 mpg-gitlab mr create [flags]
   -s, --source string      Source branch (required)

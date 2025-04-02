@@ -99,13 +99,19 @@ var (
 		Short: "Add changelog entry from merge request to its milestone",
 		Run:   runAddChangelog,
 	}
+
+	getMRFromCommitCmd = &cobra.Command{
+		Use:   "get-mr-from-commit",
+		Short: "Get merge request IID from commit",
+		Run:   runGetMRFromCommit,
+	}
 )
 
 func init() {
 	client = utils.GetClient()
 
 	// Add subcommands
-	MergeRequestsCmd.AddCommand(listCmd, getCmd, createCmd, updateCmd, mergeCmd, closeCmd, getDescriptionCmd, getIssuesCmd, checkChangelogCmd, blockCmd, unblockCmd, checkMilestoneCmd, addChangelogCmd)
+	MergeRequestsCmd.AddCommand(listCmd, getCmd, createCmd, updateCmd, mergeCmd, closeCmd, getDescriptionCmd, getIssuesCmd, checkChangelogCmd, blockCmd, unblockCmd, checkMilestoneCmd, addChangelogCmd, getMRFromCommitCmd)
 
 	// List flags
 	listCmd.Flags().IntP("project", "p", 0, "Project ID")
@@ -179,8 +185,14 @@ func init() {
 	addChangelogCmd.Flags().IntP("project", "p", 0, "Project ID")
 	addChangelogCmd.MarkFlagRequired("mr")
 
+	// Get MR from commit flags
+	getMRFromCommitCmd.Flags().StringP("commit", "c", "", "Commit ID (SHA)")
+	getMRFromCommitCmd.Flags().StringP("message", "m", "", "Commit message (optional)")
+	getMRFromCommitCmd.Flags().IntP("project", "p", 0, "Project ID")
+	getMRFromCommitCmd.MarkFlagsMutuallyExclusive("commit", "message")
+
 	// Add command to parent
-	MergeRequestsCmd.AddCommand(checkMilestoneCmd, addChangelogCmd)
+	MergeRequestsCmd.AddCommand(checkMilestoneCmd, addChangelogCmd, getMRFromCommitCmd)
 }
 
 func runList(cmd *cobra.Command, args []string) {
@@ -494,4 +506,24 @@ func runAddChangelog(cmd *cobra.Command, args []string) {
 	}
 
 	fmt.Println("Successfully updated milestone changelog")
+}
+
+func runGetMRFromCommit(cmd *cobra.Command, args []string) {
+	var mrIID int
+	var err error
+
+	if commitID, _ := cmd.Flags().GetString("commit"); commitID != "" {
+		projectID, _ := utils.GetProjectID(cmd)
+		mrIID, err = GetMRFromCommit(projectID, commitID)
+	} else if message, _ := cmd.Flags().GetString("message"); message != "" {
+		mrIID, err = GetMRFromCommitMessage(message)
+	} else {
+		log.Fatal("Either --commit or --message flag is required")
+	}
+
+	if err != nil {
+		log.Fatalf("Failed to get merge request IID: %v", err)
+	}
+
+	fmt.Printf("%d\n", mrIID)
 }
